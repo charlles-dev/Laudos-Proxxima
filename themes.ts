@@ -17,26 +17,26 @@ export const themes: Theme[] = [
     id: 'light',
     name: 'Claro',
     colors: {
-      primary: '#2B388C', // Azul Proxxima
-      secondary: '#4b5563', // Gray 600
-      accent: '#E32085', // Rosa Proxxima
-      surface: '#f3f4f6', // Gray 100
-      paper: '#ffffff',   // White
-      text: '#111827',    // Gray 900
-      border: '#e5e7eb'   // Gray 200
+      primary: 'var(--proxxima-disco)', // #9B2071
+      secondary: 'var(--proxxima-tundora)', // #444444 (Text)
+      accent: 'var(--proxxima-cerise)', // #CD2784
+      surface: 'var(--whitesmoke-100)',
+      paper: 'var(--white-100)',
+      text: 'var(--proxxima-tundora)',
+      border: 'var(--lightgray-200)'
     }
   },
   {
     id: 'dark',
     name: 'Escuro',
     colors: {
-      primary: '#60a5fa', // Blue 400 (Mais legível no escuro)
-      secondary: '#9ca3af', // Gray 400
-      accent: '#f472b6', // Pink 400
-      surface: '#0f172a', // Slate 900
-      paper: '#1e293b',   // Slate 800
-      text: '#f3f4f6',    // Gray 100
-      border: '#334155'   // Slate 700
+      primary: 'var(--proxxima-disco)',
+      secondary: '#a0a0a0', // Adjusted for dark mode readability
+      accent: 'var(--proxxima-cerise)',
+      surface: 'rgb(20, 10, 25)', // Deep Purple Background
+      paper: '#1a1a1a',
+      text: '#e0e0e0',
+      border: '#333'
     }
   }
 ];

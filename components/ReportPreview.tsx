@@ -9,19 +9,21 @@ import {
   MapPin,
   Wrench,
   Globe,
-  Mail
+  Mail,
+  Camera
 } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 
 interface ReportPreviewProps {
   data: ReportData;
 }
 
-// Cores Oficiais Proxxima (Fixas para o Laudo)
+// Cores Oficiais Proxxima (Atualizado)
 const COLORS = {
-  primary: '#2B388C', // Azul Oficial
-  accent: '#E32085',  // Rosa Oficial
-  text: '#1f2937',    // Cinza Escuro
-  border: '#e5e7eb'   // Cinza Claro
+  primary: '#9B2071', // Roxo Proxxima
+  accent: '#CD2784',  // Rosa Proxxima
+  text: '#444444',    // Cinza Escuro Tundora
+  border: '#e5e7eb'   // Cinza Claro (Keeping neutral for structure)
 };
 
 export const ReportPreview: React.FC<ReportPreviewProps> = ({ data }) => {
@@ -192,15 +194,53 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ data }) => {
             </div>
           </div>
 
+          {/* Fotos / Evidências */}
+          {data.photos && data.photos.length > 0 && data.photos.some(p => p.trim() !== '') && (
+            <div>
+              <h3
+                className="flex items-center gap-2 font-bold uppercase text-sm border-b pb-2 mb-3"
+                style={{ color: COLORS.primary, borderColor: COLORS.border }}
+              >
+                <Camera className="w-5 h-5" style={{ color: COLORS.accent }} />
+                4. Evidências Fotográficas
+              </h3>
+              <div className="grid grid-cols-2 gap-4">
+                {data.photos.filter(p => p.trim() !== '').map((url, idx) => (
+                  <div key={idx} className="border border-gray-200 p-1 rounded bg-white relative h-48 overflow-hidden">
+                    <img
+                      src={url}
+                      alt={`Evidência ${idx + 1}`}
+                      className="w-full h-full object-cover rounded"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = 'none';
+                        (e.target as HTMLImageElement).parentElement!.innerText = 'Imagem indisponível';
+                      }}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
         </div>
       </div>
 
       {/* Footer / Assinatura */}
       <div className="mt-auto px-10 pb-12 pt-6">
         <div className="grid grid-cols-2 gap-10 items-end">
-          <div className="text-xs text-gray-400">
-            <p className="mb-1">Este documento foi gerado eletronicamente.</p>
-            <p>Proxxima Telecom • Ref ID: {documentId}</p>
+          <div className="text-xs text-gray-400 flex gap-4 items-center">
+            <div className="bg-white p-1">
+              <QRCodeSVG
+                value={`${window.location.origin}/?ref=${(data as any).id || 'preview'}`}
+                size={64}
+                style={{ height: "auto", maxWidth: "100%", width: "64px" }}
+              />
+            </div>
+            <div>
+              <p className="font-bold text-gray-600 mb-0.5">Verificação de Autenticidade</p>
+              <p className="mb-0.5">Escaneie o QR Code.</p>
+              <p>Ref ID: {(data as any).id || documentId}</p>
+            </div>
           </div>
           <div className="text-center">
             {/* Nome do técnico acima da linha */}

@@ -1,0 +1,110 @@
+:root {
+    /* Strict Brand Palette */
+    --proxxima-disco: #9B2071;
+    /* Primary */
+    --proxxima-cerise: #CD2784;
+    /* Accent */
+    --proxxima-tundora: #444444;
+    /* Text */
+
+    /* Legacy Mappings (Redirecting to new palette where appropriate) */
+    --deeppink: var(--proxxima-cerise);
+    --darkslateblue: var(--proxxima-disco);
+    --plum: #D08DBA;
+    /* Keeping for some gradients if needed, or derived */
+
+    /* Neutrals */
+    --white-100: #ffffff;
+    --whitesmoke-100: #f6f6f6;
+    --lightgray-200: #e5e7eb;
+    --black-400: #111;
+    --color-border: #e5e7eb;
+    /* Fallback */
+}
+
+@import "tailwindcss";
+
+@layer utilities {
+    .animate-fade-in {
+        animation: fadeIn 0.5s ease-out;
+    }
+
+    .animate-fade-in-up {
+        animation: fadeInUp 0.5s ease-out;
+    }
+
+    .scrollbar-thin::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .scrollbar-thin::-webkit-scrollbar-thumb {
+        background-color: var(--color-border);
+        border-radius: 3px;
+    }
+
+    /* Adding new strict palette utilities just in case */
+    .text-proxxima-disco {
+        color: var(--proxxima-disco);
+    }
+
+    .bg-proxxima-disco {
+        background-color: var(--proxxima-disco);
+    }
+
+    .text-proxxima-cerise {
+        color: var(--proxxima-cerise);
+    }
+
+    .bg-proxxima-cerise {
+        background-color: var(--proxxima-cerise);
+    }
+
+    .text-proxxima-tundora {
+        color: var(--proxxima-tundora);
+    }
+
+    /* Animation for Landing Page Background */
+    .bg-300\% {
+        background-size: 300% 300%;
+    }
+
+    .animate-gradient {
+        animation: gradient 8s ease infinite;
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes gradient {
+    0% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
+
+    100% {
+        background-position: 0% 50%;
+    }
+}

@@ -9,6 +9,7 @@ export enum DeviceType {
 }
 
 export interface ReportData {
+  id?: string;
   requesterName: string;
   requesterSector: string;
   deviceType: DeviceType;
@@ -21,6 +22,7 @@ export interface ReportData {
   technicianName: string;
   date: string;
   fullDescription: string;
+  photos?: string[];
 }
 
 export const INITIAL_DATA: ReportData = {

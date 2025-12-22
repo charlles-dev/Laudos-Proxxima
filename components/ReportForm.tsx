@@ -4,7 +4,7 @@ import { Sparkles, Loader2 } from 'lucide-react';
 
 interface ReportFormProps {
   data: ReportData;
-  onChange: (key: keyof ReportData, value: string) => void;
+  onChange: (key: keyof ReportData, value: any) => void;
   onGenerateAI: () => Promise<void>;
   isGenerating: boolean;
 }
@@ -158,6 +158,46 @@ export const ReportForm: React.FC<ReportFormProps> = ({
           className={inputClass}
           placeholder="Seu nome"
         />
+      </div>
+
+      {/* Photos Section */}
+      <div className="border-t border-line pt-4">
+        <label className={labelClass}>Evidências (URLs das Imagens - Opcional)</label>
+        <p className="text-xs text-secondary mb-2">Cole links diretos para as imagens de evidência.</p>
+        <div className="space-y-2">
+          {(data.photos || []).map((photo: string, index: number) => (
+            <div key={index} className="flex gap-2">
+              <input
+                type="text"
+                value={photo}
+                className={inputClass}
+                placeholder="https://..."
+                onChange={(e) => {
+                  const newPhotos = [...(data.photos || [])];
+                  newPhotos[index] = e.target.value;
+                  onChange('photos', newPhotos);
+                }}
+              />
+              <button
+                onClick={() => {
+                  const newPhotos = (data.photos || []).filter((_, i) => i !== index);
+                  onChange('photos', newPhotos);
+                }}
+                className="text-red-500 p-2 hover:bg-red-50 rounded"
+                title="Remover"
+              >
+                ✕
+              </button>
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={() => onChange('photos', [...(data.photos || []), ''])}
+            className="text-sm font-medium text-primary hover:text-accent flex items-center gap-1 mt-2"
+          >
+            + Adicionar Imagem
+          </button>
+        </div>
       </div>
     </div>
   );
