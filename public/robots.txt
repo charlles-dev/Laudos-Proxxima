@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://laudos.proxxima.net/sitemap.xml

@@ -139,7 +139,7 @@ Proxxima Telecom
             />
           </div>
           <div className="hidden md:block h-6 w-px bg-line"></div>
-          <p className="hidden md:block text-[10px] text-primary font-bold uppercase tracking-widest mt-1">Gerador de Laudos</p>
+          <h1 className="hidden md:block text-[10px] text-primary font-bold uppercase tracking-widest mt-1">Gerador de Laudos</h1>
         </div>
 
         <div className="flex items-center gap-3">
