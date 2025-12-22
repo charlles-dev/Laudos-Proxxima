@@ -204,7 +204,9 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ data }) => {
           </div>
           <div className="text-center">
             {/* Nome do técnico acima da linha */}
-            <p className="font-bold text-gray-900 mb-1">{data.technicianName || "Técnico Responsável"}</p>
+            <p className="text-2xl text-gray-800 mb-2 transform -rotate-2" style={{ fontFamily: '"Dancing Script", "Brush Script MT", cursive' }}>
+              {data.technicianName || "Técnico Responsável"}
+            </p>
             <div className="border-t border-gray-400 w-full mb-2"></div>
             {/* Depto abaixo da linha */}
             <p
