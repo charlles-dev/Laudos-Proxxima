@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { AnimatePresence } from 'framer-motion';
-import { INITIAL_DATA, ReportData } from './types';
+import { INITIAL_DATA, ReportData, generateRefId } from './types';
 import { ReportForm } from './components/ReportForm';
 import { ReportPreview } from './components/ReportPreview';
 import { PreviewModal } from './components/PreviewModal';
@@ -253,7 +253,7 @@ const AppContent: React.FC = () => {
   };
 
   const handleCreateNew = () => {
-    setData(INITIAL_DATA);
+    setData({ ...INITIAL_DATA, refId: generateRefId() });
     setViewMode('editor');
     // Check for draft restoration could go here
   };
@@ -266,7 +266,7 @@ const AppContent: React.FC = () => {
 
   const handleCloneReport = (report: any) => {
     const { id, userId, createdAt, ...formData } = report;
-    setData(formData);
+    setData({ ...formData, refId: generateRefId() });
     setViewMode('editor');
     showNotification("Laudo clonado! Agora é só salvar.");
   };

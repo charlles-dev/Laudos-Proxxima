@@ -75,7 +75,7 @@ export const PublicReportViewer: React.FC<PublicReportViewerProps> = ({ reportId
                                 <span className="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded-full border border-green-200 uppercase tracking-wide">Verificado</span>
                             </h2>
                             <p className="text-gray-500 text-sm mt-1">
-                                Emitido por <strong className="text-gray-700">Proxxima Telecom</strong> • {new Date(report.date).toLocaleDateString('pt-BR')}
+                                Emitido por <strong className="text-gray-700">{report.technicianName}</strong> • {new Date(report.date).toLocaleDateString('pt-BR')}
                             </p>
                         </div>
                     </div>
@@ -83,7 +83,7 @@ export const PublicReportViewer: React.FC<PublicReportViewerProps> = ({ reportId
                     <div className="text-right hidden md:block">
                         <p className="text-xs text-gray-400 uppercase tracking-wider font-semibold mb-1">Hash de Validação</p>
                         <code className="bg-gray-50 px-3 py-1.5 rounded text-sm font-mono text-gray-600 border border-gray-200 select-all">
-                            {(report as any).id || reportId}
+                            {(report as any).refId || report.id}
                         </code>
                     </div>
                 </div>

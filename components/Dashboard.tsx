@@ -219,7 +219,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onCreateNew, onViewReport,
                 {report.createdAt ? new Date(report.createdAt).toLocaleDateString() : '-'}
             </td>
             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-primary">
-                {report.id.slice(0, 8)}...
+                {report.refId || report.id.slice(0, 8)}
             </td>
             <td className="px-6 py-4 whitespace-nowrap text-sm text-text">
                 <div className="flex flex-col">

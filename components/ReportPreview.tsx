@@ -92,7 +92,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ data, isGenerating
           <div className="flex flex-col items-end gap-1">
             <div className="flex items-center gap-2 bg-gray-50 px-3 py-1 rounded border border-gray-100">
               <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Ref:</span>
-              <span className="text-sm font-mono font-bold text-gray-700">{documentId}</span>
+              <span className="text-sm font-mono font-bold text-gray-700">{(data as any).refId || (data as any).id || documentId}</span>
             </div>
             <div className="flex items-center gap-1.5 text-sm font-medium text-gray-500 mt-1">
               <Calendar className="w-3.5 h-3.5" style={{ color: COLORS.accent }} />
@@ -236,15 +236,26 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ data, isGenerating
           <div className="text-xs text-gray-400 flex gap-4 items-center">
             <div className="bg-white p-1">
               <QRCodeSVG
-                value={`${window.location.origin}/?ref=${(data as any).id || 'preview'}`}
+                value={`${window.location.origin}/?ref=${(data as any).refId || (data as any).id || 'preview'}`}
                 size={64}
                 style={{ height: "auto", maxWidth: "100%", width: "64px" }}
               />
             </div>
             <div>
               <p className="font-bold text-gray-600 mb-0.5">Verificação de Autenticidade</p>
-              <p className="mb-0.5">Escaneie o QR Code.</p>
-              <p>Ref ID: {(data as any).id || documentId}</p>
+              <p className="mb-0.5">
+                Escaneie o QR Code ou{' '}
+                <a
+                  href={`${window.location.origin}/?ref=${(data as any).refId || (data as any).id || 'preview'}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline hover:text-accent transition-colors cursor-pointer"
+                >
+                  clique aqui
+                </a>
+                {' '}para validar.
+              </p>
+              <p>REF ID: {(data as any).refId || (data as any).id || documentId}</p>
             </div>
           </div>
           <div className="text-center">

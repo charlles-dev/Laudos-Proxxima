@@ -10,6 +10,7 @@ export enum DeviceType {
 
 export interface ReportData {
   id?: string;
+  refId?: string;
   requesterName: string;
   requesterSector: string;
   deviceType: DeviceType;
@@ -43,3 +44,5 @@ export const INITIAL_DATA: ReportData = {
   status: 'open',
   priority: 'normal'
 };
+
+export const generateRefId = () => Math.random().toString(36).substr(2, 9).toUpperCase();

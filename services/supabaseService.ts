@@ -34,6 +34,7 @@ export const saveReport = async (userId: string, data: ReportData) => {
             .from('reports')
             .insert({
                 user_id: userId,
+                ref_id: data.refId,
                 model: data.model,
                 serial_number: data.serialNumber,
                 patrimony_id: data.patrimonyId,
@@ -183,7 +184,7 @@ export const getPublicReport = async (reportId: string) => {
 
         return mapReportFromDB(data[0]);
     } catch (error) {
-        console.error("Erro ao buscar laudo público:", error);
+        console.error("Erro ao buscar laudo público:", JSON.stringify(error, null, 2));
         return null; // Return null gracefully so UI can show 404
     }
 };
@@ -311,6 +312,7 @@ export const getRecentLogs = async () => {
 // Helper
 const mapReportFromDB = (dbItem: any): SavedReport => ({
     id: dbItem.id,
+    refId: dbItem.ref_id,
     userId: dbItem.user_id,
     createdAt: dbItem.created_at,
     model: dbItem.model,
