@@ -334,6 +334,7 @@ const AppContent: React.FC = () => {
         margin: [0, 0, 40, 0], // Top, Right, Bottom, Left (mm). Added 40mm bottom for footer
         filename: filename,
         image: { type: 'jpeg', quality: 0.98 },
+        enableLinks: true,
         html2canvas: { scale: 2, useCORS: true },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
       };
@@ -345,12 +346,27 @@ const AppContent: React.FC = () => {
         const pageHeight = pdf.internal.pageSize.getHeight();
 
         // Desired footer height in mm
-        const drawnFooterHeight = 35; // slightly less than margin
+        // Desired footer height in mm
+        const drawnFooterHeight = 45; // slightly less than margin (increased for better QR scan)
+        const barHeight = 2.5; // ~8px
 
         for (let i = 1; i <= totalPages; i++) {
           pdf.setPage(i);
-          // Add footer image at the bottom
-          pdf.addImage(footerImgData, 'PNG', 0, pageHeight - drawnFooterHeight, pageWidth, drawnFooterHeight);
+
+          // Draw Top Bar (Pink Proxxima: #E32085)
+          pdf.setFillColor(227, 32, 133);
+          pdf.rect(0, 0, pageWidth, barHeight, 'F');
+
+          // Draw Bottom Bar (Blue Proxxima: #2B388C)
+          pdf.setFillColor(43, 56, 140);
+          pdf.rect(0, pageHeight - barHeight, pageWidth, barHeight, 'F');
+
+          // Add footer image at the bottom, just above the bottom bar
+          pdf.addImage(footerImgData, 'PNG', 0, pageHeight - drawnFooterHeight - barHeight, pageWidth, drawnFooterHeight);
+
+          // Add Clickable Link over the QR Code / Validation Text area
+          const linkUrl = `${window.location.origin}/?ref=${data.refId || data.id}`;
+          pdf.link(10, pageHeight - drawnFooterHeight - barHeight + 5, 80, 40, { url: linkUrl });
         }
       }).save();
 

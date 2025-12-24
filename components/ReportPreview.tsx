@@ -10,7 +10,8 @@ import {
   Wrench,
   Globe,
   Mail,
-  Camera
+  Camera,
+  ExternalLink
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { SkeletonLoader } from './SkeletonLoader';
@@ -23,8 +24,8 @@ interface ReportPreviewProps {
 
 // Cores Oficiais Proxxima (Atualizado)
 const COLORS = {
-  primary: '#9B2071', // Roxo Proxxima
-  accent: '#CD2784',  // Rosa Proxxima
+  primary: '#E32085', // Pink Proxxima
+  accent: '#2B388C',  // Blue Proxxima (used as accent/secondary here)
   text: '#444444',    // Cinza Escuro Tundora
   border: '#e5e7eb'   // Cinza Claro (Keeping neutral for structure)
 };
@@ -41,10 +42,10 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ data, isGenerating
       <ul className="space-y-2">
         {items.map((item, idx) => (
           <li key={idx} className="flex items-start gap-2 text-sm text-gray-700 text-justify">
-            {/* Bolinha da lista com cor fixa Accent (Rosa) */}
+            {/* Bolinha da lista com cor fixa Primary (Pink) */}
             <span
               className="mt-1.5 w-1.5 h-1.5 rounded-full shrink-0"
-              style={{ backgroundColor: COLORS.accent }}
+              style={{ backgroundColor: COLORS.primary }}
             />
             <span>{item.trim()}</span>
           </li>
@@ -57,7 +58,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ data, isGenerating
     <div id={elementId} className="bg-white shadow-2xl mx-auto flex flex-col" style={{ width: '210mm', minHeight: '297mm', padding: '0' }}>
 
       {/* 1. Faixa de Topo Decorativa */}
-      <div style={{ height: '8px', backgroundColor: COLORS.accent, width: '100%' }}></div>
+      <div style={{ height: '8px', backgroundColor: COLORS.primary, width: '100%' }}></div>
 
       {/* 2. Header Corporativo Estilo "Papel Timbrado" */}
       <div className="px-10 py-8 flex justify-between items-start" style={{ pageBreakInside: 'avoid' }}>
@@ -84,7 +85,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ data, isGenerating
         <div className="text-right">
           <h2
             className="text-3xl font-extrabold uppercase tracking-tight leading-none mb-2"
-            style={{ color: COLORS.primary }}
+            style={{ color: COLORS.accent }}
           >
             Laudo Técnico
           </h2>
@@ -95,7 +96,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ data, isGenerating
               <span className="text-sm font-mono font-bold text-gray-700">{(data as any).refId || (data as any).id || documentId}</span>
             </div>
             <div className="flex items-center gap-1.5 text-sm font-medium text-gray-500 mt-1">
-              <Calendar className="w-3.5 h-3.5" style={{ color: COLORS.accent }} />
+              <Calendar className="w-3.5 h-3.5" style={{ color: COLORS.primary }} />
               <span>{new Date(data.date).toLocaleDateString('pt-BR')}</span>
             </div>
           </div>
@@ -139,11 +140,11 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ data, isGenerating
 
             <div className="col-span-2 border-t border-gray-100 pt-3 mt-1 flex items-center gap-6">
               <div className="flex items-center gap-2 text-sm text-gray-600">
-                <User className="w-4 h-4" style={{ color: COLORS.primary }} />
+                <User className="w-4 h-4" style={{ color: COLORS.accent }} />
                 <span className="font-medium">Solicitante:</span> {data.requesterName}
               </div>
               <div className="flex items-center gap-2 text-sm text-gray-600">
-                <MapPin className="w-4 h-4" style={{ color: COLORS.primary }} />
+                <MapPin className="w-4 h-4" style={{ color: COLORS.accent }} />
                 <span className="font-medium">Setor:</span> {data.requesterSector}
               </div>
             </div>
@@ -157,7 +158,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ data, isGenerating
           <div style={{ pageBreakInside: 'avoid' }}>
             <h3
               className="flex items-center gap-2 font-bold uppercase text-sm border-b pb-2 mb-3"
-              style={{ color: COLORS.primary, borderColor: COLORS.border }}
+              style={{ color: COLORS.accent, borderColor: COLORS.border }}
             >
               <AlertCircle className="w-5 h-5 text-red-500" />
               1. Defeito Relatado
@@ -171,9 +172,9 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ data, isGenerating
           <div style={{ pageBreakInside: 'avoid' }}>
             <h3
               className="flex items-center gap-2 font-bold uppercase text-sm border-b pb-2 mb-3"
-              style={{ color: COLORS.primary, borderColor: COLORS.border }}
+              style={{ color: COLORS.accent, borderColor: COLORS.border }}
             >
-              <Wrench className="w-5 h-5" style={{ color: COLORS.accent }} />
+              <Wrench className="w-5 h-5" style={{ color: COLORS.primary }} />
               2. Análise Técnica & Diagnóstico
             </h3>
             <div className="px-2">
@@ -185,7 +186,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ data, isGenerating
           <div style={{ pageBreakInside: 'avoid' }}>
             <h3
               className="flex items-center gap-2 font-bold uppercase text-sm border-b pb-2 mb-3"
-              style={{ color: COLORS.primary, borderColor: COLORS.border }}
+              style={{ color: COLORS.accent, borderColor: COLORS.border }}
             >
               <CheckCircle2 className="w-5 h-5 text-green-600" />
               3. Parecer Técnico / Solução
@@ -204,25 +205,42 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ data, isGenerating
             <div style={{ pageBreakInside: 'avoid' }}>
               <h3
                 className="flex items-center gap-2 font-bold uppercase text-sm border-b pb-2 mb-3"
-                style={{ color: COLORS.primary, borderColor: COLORS.border }}
+                style={{ color: COLORS.accent, borderColor: COLORS.border }}
               >
-                <Camera className="w-5 h-5" style={{ color: COLORS.accent }} />
+                <Camera className="w-5 h-5" style={{ color: COLORS.primary }} />
                 4. Evidências Fotográficas
               </h3>
               <div className="grid grid-cols-2 gap-4">
-                {data.photos.filter(p => p.trim() !== '').map((url, idx) => (
-                  <div key={idx} className="border border-gray-200 p-1 rounded bg-white relative h-48 overflow-hidden">
-                    <img
-                      src={url}
-                      alt={`Evidência ${idx + 1}`}
-                      className="w-full h-full object-cover rounded"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).style.display = 'none';
-                        (e.target as HTMLImageElement).parentElement!.innerText = 'Imagem indisponível';
-                      }}
-                    />
-                  </div>
-                ))}
+                {(() => {
+                  const validPhotos = data.photos.filter(p => p.trim() !== '');
+                  return (
+                    <div className={`col-span-2 grid gap-4 ${validPhotos.length <= 3 ? 'grid-cols-1' : 'grid-cols-2'}`}>
+                      {validPhotos.map((url, idx) => (
+                        <div key={idx} className="flex flex-col gap-1 break-inside-avoid">
+                          <div className={`border border-gray-200 p-1 rounded bg-white relative overflow-hidden group ${validPhotos.length <= 3 ? 'h-64' : 'h-48'}`}>
+                            <img
+                              src={url}
+                              alt={`Evidência ${idx + 1}`}
+                              className="w-full h-full object-cover rounded transition-transform duration-500 group-hover:scale-110"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).style.display = 'none';
+                                (e.target as HTMLImageElement).parentElement!.innerText = 'Imagem indisponível';
+                              }}
+                            />
+                          </div>
+                          <a
+                            href={url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[10px] text-center text-gray-500 hover:text-primary hover:underline flex items-center justify-center gap-1 py-1"
+                          >
+                            <ExternalLink size={10} /> Ver imagem original
+                          </a>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })()}
               </div>
             </div>
           )}
@@ -237,8 +255,8 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ data, isGenerating
             <div className="bg-white p-1">
               <QRCodeSVG
                 value={`${window.location.origin}/?ref=${(data as any).refId || (data as any).id || 'preview'}`}
-                size={64}
-                style={{ height: "auto", maxWidth: "100%", width: "64px" }}
+                size={80}
+                style={{ height: "auto", maxWidth: "100%", width: "80px" }}
               />
             </div>
             <div>
@@ -258,25 +276,30 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ data, isGenerating
               <p>REF ID: {(data as any).refId || (data as any).id || documentId}</p>
             </div>
           </div>
-          <div className="text-center">
-            {/* Nome do técnico acima da linha */}
-            <p className="text-2xl text-gray-800 mb-2 transform -rotate-2" style={{ fontFamily: '"Dancing Script", "Brush Script MT", cursive' }}>
-              {data.technicianName || "Técnico Responsável"}
-            </p>
-            <div className="border-t border-gray-400 w-full mb-2"></div>
-            {/* Depto abaixo da linha */}
-            <p
-              className="text-xs uppercase tracking-wider font-semibold"
-              style={{ color: COLORS.primary }}
-            >
-              Depto. Técnico de TI
-            </p>
+          <div className="text-center flex flex-col items-center">
+
+
+            <div className="w-full relative pt-8">
+              {/* Nome do técnico */}
+              <p className="text-xl text-gray-800 flex items-center justify-center gap-2 mb-1" style={{ fontFamily: '"Dancing Script", "Brush Script MT", cursive' }}>
+                {(data.technicianName || "Técnico Responsável").split(' - ')[0]}
+              </p>
+
+              {/* Linha da assinatura */}
+              <div className="border-t border-gray-400 w-full"></div>
+
+              {/* Depto e Cargo */}
+              <div className="flex justify-between items-center mt-1 text-[10px] uppercase tracking-wider font-semibold" style={{ color: COLORS.accent }}>
+                <span>Depto. Técnico de TI</span>
+                <span>{(data.technicianName || "").split(' - ')[1] || ""}</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Faixa decorativa final */}
-      <div className="h-2 w-full mt-4 bg-white" style={{ backgroundColor: COLORS.primary, pageBreakInside: 'avoid' }}></div>
+      {/* Faixa decorativa final removida pois será desenhada apenas no PDF */}
+
     </div>
   );
 };

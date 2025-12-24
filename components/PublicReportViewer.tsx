@@ -55,7 +55,7 @@ export const PublicReportViewer: React.FC<PublicReportViewerProps> = ({ reportId
     }
 
     return (
-        <div className="min-h-screen bg-gray-100 py-8 px-4 font-sans relative overflow-hidden">
+        <div className="min-h-screen bg-gray-100 py-8 px-4 font-sans relative overflow-x-hidden">
 
             {/* Background Pattern */}
             <div className="absolute inset-0 opacity-[0.03] pointer-events-none"
@@ -63,40 +63,44 @@ export const PublicReportViewer: React.FC<PublicReportViewerProps> = ({ reportId
             </div>
 
             {/* Verification Header */}
-            <div className="max-w-[210mm] mx-auto mb-8 relative z-10">
-                <div className="bg-white border-l-4 border-green-500 rounded-r-lg shadow-sm p-6 flex flex-col md:flex-row items-center justify-between gap-6">
-                    <div className="flex items-center gap-4">
-                        <div className="bg-green-100 p-3 rounded-full animate-pulse-slow">
+            <div className="max-w-4xl mx-auto mb-8 relative z-10 w-full">
+                <div className="bg-white border-l-4 border-green-500 rounded-r-lg shadow-sm p-4 md:p-6 flex flex-col md:flex-row items-center md:justify-between gap-4 md:gap-6 text-center md:text-left">
+                    <div className="flex flex-col md:flex-row items-center gap-4">
+                        <div className="bg-green-100 p-3 rounded-full">
                             <ShieldCheck className="w-8 h-8 text-green-600" />
                         </div>
                         <div>
-                            <h2 className="text-gray-900 font-bold text-xl flex items-center gap-2">
+                            <h2 className="text-gray-900 font-bold text-lg md:text-xl flex flex-col md:flex-row items-center gap-2 justify-center md:justify-start">
                                 Laudo Técnico Autêntico
-                                <span className="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded-full border border-green-200 uppercase tracking-wide">Verificado</span>
+                                <span className="bg-green-100 text-green-700 text-[10px] px-2 py-0.5 rounded-full border border-green-200 uppercase tracking-wide">Verificado</span>
                             </h2>
                             <p className="text-gray-500 text-sm mt-1">
-                                Emitido por <strong className="text-gray-700">{report.technicianName}</strong> • {new Date(report.date).toLocaleDateString('pt-BR')}
+                                Emitido por <strong className="text-gray-700">{report.technicianName}</strong><br className="md:hidden" />
+                                <span className="hidden md:inline"> • </span>
+                                {new Date(report.date).toLocaleDateString('pt-BR')}
                             </p>
                         </div>
                     </div>
 
-                    <div className="text-right hidden md:block">
-                        <p className="text-xs text-gray-400 uppercase tracking-wider font-semibold mb-1">Hash de Validação</p>
-                        <code className="bg-gray-50 px-3 py-1.5 rounded text-sm font-mono text-gray-600 border border-gray-200 select-all">
+                    <div className="w-full md:w-auto text-center md:text-right border-t md:border-0 pt-4 md:pt-0 mt-2 md:mt-0">
+                        <p className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold mb-1">Hash de Validação</p>
+                        <code className="bg-gray-50 px-3 py-1.5 rounded text-xs font-mono text-gray-600 border border-gray-200 select-all block md:inline-block">
                             {(report as any).refId || report.id}
                         </code>
                     </div>
                 </div>
             </div>
 
-            {/* The Report Preview */}
-            <div className="flex justify-center relative z-10 pb-20">
-                <div className="shadow-2xl rounded-sm overflow-hidden transform transition-all hover:scale-[1.005] duration-500">
+            {/* The Report Preview - Responsive Wrapper */}
+            <div className="flex justify-center relative z-10 pb-20 w-full overflow-x-auto md:overflow-visible">
+                {/* 
+                   We use a trick here: scale down on mobile, but keep layout valid. 
+                   Since 210mm is approx 794px.
+                */}
+                <div className="origin-top transform scale-[0.45] sm:scale-[0.6] md:scale-[0.8] lg:scale-100 transition-transform duration-300 shadow-2xl rounded-sm">
                     <ReportPreview data={report} />
                 </div>
             </div>
-
-            {/* Float Action Button equivalent for downloading? Maybe later. */}
 
             <div className="text-center text-gray-400 text-xs fixed bottom-6 left-0 w-full pointer-events-none">
                 © {new Date().getFullYear()} Proxxima Telecom. Validação Digital.

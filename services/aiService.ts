@@ -65,10 +65,12 @@ export const generateTechnicalReport = async (
     ${imageParts.length > 0 ? "IMPORTANTE: Analise também as imagens fornecidas para identificar danos físicos visíveis, estado de conservação ou códigos de erro na tela." : ""}
     
     Regras de Formatação:
-    1. "Defeito Relatado": Descrição clara do problema.
-    2. "Análise Técnica": 3 a 4 tópicos técnicos (bullet points) sobre o diagnóstico. Se houver imagens, cite evidências visuais se relevantes.
-    3. "Recomendação": Solução definitiva.
+    1. "Defeito Relatado": Descrição clara do problema em um único parágrafo conciso.
+    2. "Análise Técnica": Estritamente 3 tópicos (bullet points). Cada tópico deve ter no máximo 2 frases curtas.
+    3. "Recomendação": Solução definitiva em poucas linhas.
     
+    OBJETIVO PRINCIPAL: O texto deve ser extremamente conciso. O "3. Parecer Técnico" NÃO PODE ir para a segunda página.
+
     Retorne estritamente em JSON.
   `;
 
@@ -98,8 +100,9 @@ export const generateTechnicalReport = async (
               description: "Descrição técnica do problema."
             },
             analysis: {
-              type: Type.STRING,
-              description: "Lista de diagnóstico técnico."
+              type: Type.ARRAY,
+              items: { type: Type.STRING },
+              description: "Lista de EXATAMENTE 3 pontos técnicos de diagnóstico. Cada item deve ser curto."
             },
             recommendation: {
               type: Type.STRING,
@@ -114,7 +117,14 @@ export const generateTechnicalReport = async (
     const text = response.text;
     if (!text) throw new Error("No response from AI");
 
-    return JSON.parse(text);
+    const json = JSON.parse(text);
+
+    // Convert array back to string with bullets for compatibility
+    if (Array.isArray(json.analysis)) {
+      json.analysis = json.analysis.map((item: string) => `- ${item}`).join('\n');
+    }
+
+    return json;
 
   } catch (error) {
     console.error("Erro ao gerar laudo com IA:", error);
