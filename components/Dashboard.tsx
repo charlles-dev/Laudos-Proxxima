@@ -295,22 +295,21 @@ export const Dashboard: React.FC<DashboardProps> = ({ onCreateNew, onViewReport,
                             Meus Laudos
                         </button>
 
-                        {isAdmin && (
-                            <button
-                                onClick={() => setActiveTab('all')}
-                                className={`flex items-center gap-2 pb-3 px-2 border-b-2 transition text-sm font-medium whitespace-nowrap ${activeTab === 'all' ? 'border-primary text-primary' : 'border-transparent text-secondary hover:text-text'}`}
-                            >
-                                <List className="w-4 h-4" />
-                                Todos os Laudos
-                            </button>
-                        )}
-
+                        {/* BI Tab - Always Visible, Second Position */}
                         <button
                             onClick={() => setActiveTab('bi')}
                             className={`flex items-center gap-2 pb-3 px-2 border-b-2 transition text-sm font-medium whitespace-nowrap ${activeTab === 'bi' ? 'border-primary text-primary' : 'border-transparent text-secondary hover:text-text'}`}
                         >
                             <BarChart2 className="w-4 h-4" />
                             BI / Analítico
+                        </button>
+
+                        <button
+                            onClick={() => setActiveTab('all')}
+                            className={`flex items-center gap-2 pb-3 px-2 border-b-2 transition text-sm font-medium whitespace-nowrap ${activeTab === 'all' ? 'border-primary text-primary' : 'border-transparent text-secondary hover:text-text'}`}
+                        >
+                            <List className="w-4 h-4" />
+                            Todos os Laudos
                         </button>
 
                         {isAdmin && (
