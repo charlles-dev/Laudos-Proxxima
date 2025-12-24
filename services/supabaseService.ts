@@ -15,7 +15,7 @@ export interface UserProfile {
     displayName: string;
     jobTitle: string;
     hasCompletedOnboarding: boolean;
-    role?: 'admin' | 'user' | 'tech'; // Added role
+    role: 'admin' | 'user' | 'tech';
 }
 
 export interface ActivityLog {
@@ -213,6 +213,19 @@ export const getClients = async (query: string) => {
 
 // --- Profiles ---
 
+export const updateUserPassword = async (newPassword: string) => {
+    try {
+        const { error } = await supabase.auth.updateUser({
+            password: newPassword
+        });
+
+        if (error) throw error;
+    } catch (error) {
+        console.error("Erro ao atualizar senha:", error);
+        throw error;
+    }
+};
+
 export const getUserProfile = async (userId: string): Promise<UserProfile | null> => {
     try {
         const { data, error } = await supabase
@@ -225,11 +238,11 @@ export const getUserProfile = async (userId: string): Promise<UserProfile | null
 
         return {
             uid: data.id,
-            email: data.email,
-            displayName: data.display_name,
-            jobTitle: data.job_title,
-            hasCompletedOnboarding: data.has_completed_onboarding,
-            role: data.role || 'tech' // Default to tech
+            email: data.email || '',
+            displayName: data.display_name || '',
+            jobTitle: data.job_title || '',
+            hasCompletedOnboarding: data.has_completed_onboarding || false,
+            role: (data.role as 'admin' | 'user' | 'tech') || 'tech'
         };
     } catch (error) {
         console.error("Erro ao buscar perfil:", error);
@@ -311,9 +324,9 @@ const mapReportFromDB = (dbItem: any): SavedReport => ({
     technicianName: dbItem.technician_name,
     requesterName: dbItem.requester_name,
     requesterSector: dbItem.requester_sector || '',
-    photos: dbItem.photos || [],
-    status: dbItem.status || 'open',
-    priority: dbItem.priority || 'normal',
+    photos: (dbItem.photos as string[]) || [], // Type assertion needed for Jsonb
+    status: (dbItem.status as 'open' | 'in_progress' | 'closed') || 'open',
+    priority: (dbItem.priority as 'low' | 'normal' | 'high' | 'critical') || 'normal',
     date: new Date(dbItem.created_at).toISOString().split('T')[0]
 });
 

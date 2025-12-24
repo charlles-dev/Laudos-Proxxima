@@ -6,7 +6,7 @@ import { ReportPreview } from './components/ReportPreview';
 import { PreviewModal } from './components/PreviewModal';
 import { generateTechnicalReport } from './services/aiService';
 import { themes } from './themes';
-import { Download, Mail, Share2, CheckCircle2, Loader2, Moon, Sun, Save, LogOut, User as UserIcon, Maximize, Minimize, Eye, EyeOff, ChevronLeft } from 'lucide-react';
+import { Download, Mail, Share2, CheckCircle2, Loader2, Moon, Sun, Save, LogOut, User as UserIcon, Eye, EyeOff, ChevronLeft } from 'lucide-react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { LoginScreen } from './components/LoginScreen';
 import { saveReport, getUserProfile, updateUserProfile, UserProfile } from './services/supabaseService';
@@ -17,6 +17,7 @@ import confetti from 'canvas-confetti';
 import { ProfileModal } from './components/ProfileModal';
 import { LandingPage } from './components/LandingPage';
 import { WelcomeBackScreen } from './components/WelcomeBackScreen';
+import { ChangePasswordModal } from './components/ChangePasswordModal';
 import { PublicReportViewer } from './components/PublicReportViewer';
 import { useAutoSave } from './hooks/useAutoSave';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
@@ -29,9 +30,7 @@ const AppContent: React.FC = () => {
   const urlParams = new URLSearchParams(window.location.search);
   const refId = urlParams.get('ref');
 
-  if (refId) {
-    return <PublicReportViewer reportId={refId} />;
-  }
+
 
   // View Mode
   const [viewMode, setViewMode] = useState<'dashboard' | 'editor'>('dashboard');
@@ -49,10 +48,11 @@ const AppContent: React.FC = () => {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
-  const [showLanding, setShowLanding] = useState(true);
 
-  // Zen Mode State
-  const [isZenMode, setIsZenMode] = useState(false);
+  const [showLanding, setShowLanding] = useState(true);
+  const [showChangePassword, setShowChangePassword] = useState(false);
+
+
 
   // Tutorial State
   const [runTour, setRunTour] = useState(false);
@@ -65,6 +65,9 @@ const AppContent: React.FC = () => {
 
   // Auto Save Hook
   const { checkDraft, clearDraft } = useAutoSave(data, setData);
+
+  // Mobile Tabs State
+  const [activeMobileTab, setActiveMobileTab] = useState<'edit' | 'preview'>('edit');
 
   // Check for saved draft on mount (only log for now, or could restore)
   useEffect(() => {
@@ -94,7 +97,6 @@ const AppContent: React.FC = () => {
       action: () => {
         if (showProfileModal) setShowProfileModal(false);
         if (showToast) setShowToast(false);
-        if (isZenMode) setIsZenMode(false);
       }
     }
   ]);
@@ -137,7 +139,12 @@ const AppContent: React.FC = () => {
         if (profile) {
           setUserProfile(profile);
           if (!profile.hasCompletedOnboarding) {
-            setShowOnboarding(true);
+            // First time login flow
+            // 1. Show Welcome (First Login version)
+            // 2. Then Change Password
+            // 3. Then Onboarding
+            setShowWelcome(true);
+            // Note: Onboarding and Change Password triggers are handled after welcome completes or in sequence
           } else {
             const isJustLoggedIn = sessionStorage.getItem('just_logged_in');
             if (isJustLoggedIn) {
@@ -152,7 +159,8 @@ const AppContent: React.FC = () => {
             email: currentUser.email || '',
             hasCompletedOnboarding: false
           });
-          setShowOnboarding(true);
+          // Also trigger welcome if profile is missing (brand new user)
+          setShowWelcome(true);
         }
       });
     }
@@ -170,6 +178,11 @@ const AppContent: React.FC = () => {
     }
   }, [userProfile, viewMode, data.technicianName]);
 
+
+
+  if (refId) {
+    return <PublicReportViewer reportId={refId} />;
+  }
 
   if (!currentUser) {
     if (showLanding) {
@@ -237,7 +250,6 @@ const AppContent: React.FC = () => {
 
   const handleGoToDashboard = () => {
     setViewMode('dashboard');
-    setIsZenMode(false); // Disable Zen Mode when going to dashboard
   };
 
   const handleCreateNew = () => {
@@ -263,8 +275,7 @@ const AppContent: React.FC = () => {
     setData((prev) => ({ ...prev, [key]: value }));
   };
 
-  // Mobile Tabs State
-  const [activeMobileTab, setActiveMobileTab] = useState<'edit' | 'preview'>('edit');
+
 
   const handleGenerateAI = async () => {
     const hasContent = data.fullDescription.trim();
@@ -437,139 +448,100 @@ Proxxima Telecom
       )}
 
       <AnimatePresence>
-        {showOnboarding && (
+        {showChangePassword && (
+          <ChangePasswordModal onComplete={() => {
+            setShowChangePassword(false);
+            setShowOnboarding(true);
+          }} />
+        )}
+        {showOnboarding && !showChangePassword && (
           <OnboardingScreen onComplete={handleOnboardingComplete} />
         )}
         {showWelcome && userProfile && (
           <WelcomeBackScreen
             name={userProfile.displayName}
-            onComplete={() => setShowWelcome(false)}
+            isFirstLogin={!userProfile.hasCompletedOnboarding}
+            onComplete={() => {
+              setShowWelcome(false);
+              if (!userProfile.hasCompletedOnboarding) {
+                setShowChangePassword(true);
+              }
+            }}
           />
         )}
       </AnimatePresence>
 
-      {/* Header - Hidden in Zen Mode */}
-      {!isZenMode && (
-        <header className="tour-dashboard-header glass-strong border-b border-white/5 h-16 flex items-center justify-between px-6 shrink-0 z-20 shadow-sm relative transition-all duration-300 sticky top-0">
-          <div className="flex items-center gap-4">
-            <div className="p-1 px-2 cursor-pointer" onClick={handleGoToDashboard}>
-              <img
-                src="https://www.proxxima.net/storage/app/uploads/public/5ea/1f7/af7/5ea1f7af72b2c773156463.svg"
-                alt="Proxxima Logo"
-                className="h-8 md:h-10 w-auto object-contain transition-all duration-300"
-              />
-            </div>
-            <div className="hidden md:block h-6 w-px bg-white/10"></div>
-            <h1 className="hidden md:block text-[10px] text-primary font-bold uppercase tracking-widest mt-1">
-              {viewMode === 'dashboard' ? 'Painel de Controle' : 'Gerador de Laudos'}
-            </h1>
+      {/* Header */}
+      <header className="tour-dashboard-header glass-strong border-b border-white/5 h-16 flex items-center justify-between px-6 shrink-0 z-20 shadow-sm relative transition-all duration-300 sticky top-0">
+        <div className="flex items-center gap-4">
+          <div className="p-1 px-2 cursor-pointer" onClick={handleGoToDashboard}>
+            <img
+              src="https://www.proxxima.net/storage/app/uploads/public/5ea/1f7/af7/5ea1f7af72b2c773156463.svg"
+              alt="Proxxima Logo"
+              className="h-8 md:h-10 w-auto object-contain transition-all duration-300"
+            />
           </div>
+          <div className="hidden md:block h-6 w-px bg-white/10"></div>
+          <h1 className="hidden md:block text-[10px] text-primary font-bold uppercase tracking-widest mt-1">
+            {viewMode === 'dashboard' ? 'Painel de Controle' : 'Gerador de Laudos'}
+          </h1>
+        </div>
 
-          <div className="flex items-center gap-3">
-            <button
-              onClick={toggleTheme}
-              className="p-2 hover:bg-white/10 rounded-full transition text-secondary border border-transparent hover:border-white/10"
-              title={currentThemeId === 'light' ? "Mudar para Modo Escuro" : "Mudar para Modo Claro"}
-            >
-              {currentThemeId === 'light' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5 text-yellow-400" />}
-            </button>
-
-            {viewMode === 'editor' && (
-              <>
-                <div className="h-6 w-px bg-white/10 mx-1"></div>
-
-                {/* Zen Mode Toggle */}
-                <button
-                  onClick={() => setIsZenMode(true)}
-                  className="p-2 hover:bg-white/10 rounded-md transition text-secondary hover:text-primary border border-transparent hover:border-white/10"
-                  title="Modo Zen (Foco)"
-                >
-                  <Maximize className="w-5 h-5" />
-                </button>
-
-
-
-                <button
-                  onClick={handleSaveFirestore}
-                  disabled={isSaving}
-                  className="p-2 hover:bg-white/10 rounded-md transition text-secondary hover:text-primary border border-transparent hover:border-white/10"
-                  title="Salvar Laudo (Ctrl+S)"
-                >
-                  {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
-                </button>
-
-                <button
-                  onClick={handleCopy}
-                  className="p-2 hover:bg-white/10 rounded-md transition text-secondary hover:text-primary border border-transparent hover:border-white/10"
-                  title="Copiar Resumo"
-                >
-                  <Share2 className="w-5 h-5" />
-                </button>
-                <button
-                  onClick={handleEmail}
-                  className="p-2 hover:bg-white/10 rounded-md transition text-secondary hover:text-primary border border-transparent hover:border-white/10"
-                  title="Enviar por Email"
-                >
-                  <Mail className="w-5 h-5" />
-                </button>
-
-                <button
-                  onClick={handleDownloadPDF}
-                  disabled={isDownloading}
-                  className="flex items-center gap-2 px-4 py-2 bg-primary hover:opacity-90 text-white rounded shadow-sm transition text-sm font-semibold disabled:opacity-50"
-                  title="Gerar PDF"
-                >
-                  {isDownloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-                  <span>Gerar PDF</span>
-                </button>
-              </>
-            )}
-
-            <div className="h-6 w-px bg-white/10 mx-1"></div>
-
-            {viewMode === 'editor' && (
-              <button
-                onClick={handleGoToDashboard}
-                className="p-2 bg-secondary/10 hover:bg-secondary/20 text-secondary rounded-md transition border border-transparent text-xs font-semibold px-3"
-              >
-                Voltar
-              </button>
-            )}
-
-            <button
-              onClick={() => setShowProfileModal(true)}
-              className="p-2 hover:bg-white/10 text-secondary hover:text-primary rounded-md transition border border-transparent"
-              title="Meu Perfil"
-            >
-              <UserIcon className="w-5 h-5" />
-            </button>
-
-            <button
-              onClick={handleLogout}
-              className="p-2 hover:bg-red-500/10 text-secondary hover:text-red-500 rounded-md transition border border-transparent"
-              title="Sair"
-            >
-              <LogOut className="w-5 h-5" />
-            </button>
-          </div>
-        </header>
-      )}
-
-      {/* Zen Mode Exit Button (Floating) */}
-      {isZenMode && (
-        <div className="absolute top-4 right-6 z-50">
+        <div className="flex items-center gap-3">
           <button
-            onClick={() => setIsZenMode(false)}
-            className="p-2 bg-black/20 hover:bg-black/40 text-secondary rounded-full backdrop-blur-sm transition"
-            title="Sair do Modo Zen (Esc)"
+            onClick={toggleTheme}
+            className="p-2 hover:bg-white/10 rounded-full transition text-secondary border border-transparent hover:border-white/10"
+            title={currentThemeId === 'light' ? "Mudar para Modo Escuro" : "Mudar para Modo Claro"}
           >
-            <Minimize className="w-6 h-6" />
+            {currentThemeId === 'light' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5 text-yellow-400" />}
+          </button>
+
+          {viewMode === 'editor' && (
+            <>
+              <div className="h-6 w-px bg-white/10 mx-1"></div>
+
+              <button
+                onClick={handleCopy}
+                className="p-2 hover:bg-white/10 rounded-md transition text-secondary hover:text-primary border border-transparent hover:border-white/10"
+                title="Copiar Resumo"
+              >
+                <Share2 className="w-5 h-5" />
+              </button>
+            </>
+          )}
+
+          <div className="h-6 w-px bg-white/10 mx-1"></div>
+
+          {viewMode === 'editor' && (
+            <button
+              onClick={handleGoToDashboard}
+              className="p-2 bg-secondary/10 hover:bg-secondary/20 text-secondary rounded-md transition border border-transparent text-xs font-semibold px-3"
+            >
+              Voltar
+            </button>
+          )}
+
+          <button
+            onClick={() => setShowProfileModal(true)}
+            className="p-2 hover:bg-white/10 text-secondary hover:text-primary rounded-md transition border border-transparent"
+            title="Meu Perfil"
+          >
+            <UserIcon className="w-5 h-5" />
+          </button>
+
+          <button
+            onClick={handleLogout}
+            className="p-2 hover:bg-red-500/10 text-secondary hover:text-red-500 rounded-md transition border border-transparent"
+            title="Sair"
+          >
+            <LogOut className="w-5 h-5" />
           </button>
         </div>
-      )}
+      </header>
+
 
       {/* Mobile Tabs */}
-      {!isZenMode && viewMode === 'editor' && (
+      {viewMode === 'editor' && (
         <div className="md:hidden flex border-b border-white/5 bg-paper shrink-0">
           <button
             onClick={() => setActiveMobileTab('edit')}
@@ -599,8 +571,6 @@ Proxxima Telecom
         <main className="flex-1 flex overflow-hidden relative justify-center bg-surface">
 
           <div className="w-full max-w-5xl p-4 md:p-8 h-full flex flex-col">
-            {/* Zen Mode Header Override if needed */}
-            {isZenMode && <h2 className="text-2xl font-bold text-primary mb-6 text-center">Modo Foco 🧘</h2>}
 
             <ReportForm
               data={data}

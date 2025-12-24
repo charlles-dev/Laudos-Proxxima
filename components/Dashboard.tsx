@@ -296,29 +296,31 @@ export const Dashboard: React.FC<DashboardProps> = ({ onCreateNew, onViewReport,
                         </button>
 
                         {isAdmin && (
-                            <>
-                                <button
-                                    onClick={() => setActiveTab('all')}
-                                    className={`flex items-center gap-2 pb-3 px-2 border-b-2 transition text-sm font-medium whitespace-nowrap ${activeTab === 'all' ? 'border-primary text-primary' : 'border-transparent text-secondary hover:text-text'}`}
-                                >
-                                    <List className="w-4 h-4" />
-                                    Todos os Laudos
-                                </button>
-                                <button
-                                    onClick={() => setActiveTab('bi')}
-                                    className={`flex items-center gap-2 pb-3 px-2 border-b-2 transition text-sm font-medium whitespace-nowrap ${activeTab === 'bi' ? 'border-primary text-primary' : 'border-transparent text-secondary hover:text-text'}`}
-                                >
-                                    <BarChart2 className="w-4 h-4" />
-                                    BI / Analítico
-                                </button>
-                                <button
-                                    onClick={() => setActiveTab('logs')}
-                                    className={`flex items-center gap-2 pb-3 px-2 border-b-2 transition text-sm font-medium whitespace-nowrap ${activeTab === 'logs' ? 'border-primary text-primary' : 'border-transparent text-secondary hover:text-text'}`}
-                                >
-                                    <ActivityLogIcon className="w-4 h-4" />
-                                    Logs
-                                </button>
-                            </>
+                            <button
+                                onClick={() => setActiveTab('all')}
+                                className={`flex items-center gap-2 pb-3 px-2 border-b-2 transition text-sm font-medium whitespace-nowrap ${activeTab === 'all' ? 'border-primary text-primary' : 'border-transparent text-secondary hover:text-text'}`}
+                            >
+                                <List className="w-4 h-4" />
+                                Todos os Laudos
+                            </button>
+                        )}
+
+                        <button
+                            onClick={() => setActiveTab('bi')}
+                            className={`flex items-center gap-2 pb-3 px-2 border-b-2 transition text-sm font-medium whitespace-nowrap ${activeTab === 'bi' ? 'border-primary text-primary' : 'border-transparent text-secondary hover:text-text'}`}
+                        >
+                            <BarChart2 className="w-4 h-4" />
+                            BI / Analítico
+                        </button>
+
+                        {isAdmin && (
+                            <button
+                                onClick={() => setActiveTab('logs')}
+                                className={`flex items-center gap-2 pb-3 px-2 border-b-2 transition text-sm font-medium whitespace-nowrap ${activeTab === 'logs' ? 'border-primary text-primary' : 'border-transparent text-secondary hover:text-text'}`}
+                            >
+                                <ActivityLogIcon className="w-4 h-4" />
+                                Logs
+                            </button>
                         )}
                     </div>
 
@@ -425,17 +427,18 @@ export const Dashboard: React.FC<DashboardProps> = ({ onCreateNew, onViewReport,
 
 
                 {/* Floating Bulk Action Bar */}
+                {/* Floating Bulk Action Bar */}
                 {selectedIds.size > 0 && (
-                    <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-text text-surface px-6 py-3 rounded-full shadow-2xl z-50 flex items-center gap-6 animate-fade-in-up">
+                    <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-paper/95 backdrop-blur-sm text-text px-6 py-3 rounded-full shadow-2xl z-50 flex items-center gap-6 animate-fade-in-up border border-line">
                         <span className="font-semibold text-sm">{selectedIds.size} selecionado(s)</span>
 
-                        <div className="h-4 w-px bg-surface/20"></div>
+                        <div className="h-4 w-px bg-line"></div>
 
                         <div className="flex items-center gap-2">
                             <button
                                 onClick={() => handleBulkStatusChange('closed')}
                                 disabled={isBulkActionLoading}
-                                className="flex items-center gap-2 px-3 py-1.5 hover:bg-white/10 rounded-md transition text-sm font-medium"
+                                className="flex items-center gap-2 px-3 py-1.5 hover:bg-secondary/10 rounded-md transition text-sm font-medium text-text"
                             >
                                 <CheckSquare className="w-4 h-4" />
                                 Concluir
@@ -443,14 +446,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ onCreateNew, onViewReport,
                             <button
                                 onClick={handleBulkDelete}
                                 disabled={isBulkActionLoading}
-                                className="flex items-center gap-2 px-3 py-1.5 hover:bg-red-500/20 text-red-300 hover:text-red-400 rounded-md transition text-sm font-medium"
+                                className="flex items-center gap-2 px-3 py-1.5 hover:bg-red-500/10 text-red-500 hover:text-red-600 rounded-md transition text-sm font-medium"
                             >
                                 {isBulkActionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
                                 Excluir
                             </button>
                         </div>
 
-                        <button onClick={() => setSelectedIds(new Set())} className="ml-2 p-1 hover:bg-white/20 rounded-full">
+                        <button onClick={() => setSelectedIds(new Set())} className="ml-2 p-1 hover:bg-secondary/10 rounded-full text-secondary hover:text-text transition-colors">
                             <XSquare className="w-5 h-5" />
                         </button>
                     </div>
@@ -517,7 +520,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onCreateNew, onViewReport,
                                 </>
                             )}
 
-                            {activeTab === 'bi' && isAdmin && (
+                            {activeTab === 'bi' && (
                                 <AnalyticsDashboard reports={allReports} />
                             )}
 

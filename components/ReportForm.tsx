@@ -34,6 +34,7 @@ export const ReportForm: React.FC<ReportFormProps> = ({
   const [showEvidences, setShowEvidences] = useState((data.photos?.length || 0) > 0);
   const [isUploading, setIsUploading] = useState(false);
   const { isListening, transcript, toggleListening, hasSupport } = useSpeechRecognition();
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   // Efeito para adicionar o texto ditado à descrição
   useEffect(() => {
@@ -52,6 +53,54 @@ export const ReportForm: React.FC<ReportFormProps> = ({
 
   const nextStep = () => setCurrentStep(prev => Math.min(prev + 1, 3));
   const prevStep = () => setCurrentStep(prev => Math.max(prev - 1, 1));
+
+  const processFiles = async (files: File[]) => {
+    if (files.length === 0) return;
+
+    setIsUploading(true);
+    try {
+      const options = {
+        maxSizeMB: 1,
+        maxWidthOrHeight: 1920,
+        useWebWorker: true
+      };
+
+      const newPhotos: string[] = [];
+      const currentPhotosCount = (data.photos || []).length;
+      const remainingSlots = 5 - currentPhotosCount;
+
+      const filesToProcess = files.slice(0, remainingSlots);
+
+      if (filesToProcess.length < files.length) {
+        alert(`Apenas ${remainingSlots} fotos podem ser adicionadas.`);
+      }
+
+      for (const file of filesToProcess) {
+        const compressedFile = await imageCompression(file, options);
+        const publicUrl = await uploadEvidenceImage(compressedFile);
+        if (publicUrl) {
+          newPhotos.push(publicUrl);
+        }
+      }
+
+      if (newPhotos.length > 0) {
+        onChange('photos', [...(data.photos || []), ...newPhotos]);
+      }
+    } catch (error) {
+      console.error("Erro ao processar imagem:", error);
+      alert("Erro ao enviar imagem. Tente novamente.");
+    } finally {
+      setIsUploading(false);
+      // Reset input value to allow selecting same file again if needed
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const handleCreateFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      processFiles(Array.from(e.target.files));
+    }
+  };
 
   // Classes comuns
   const inputClass = "w-full px-4 py-2 bg-surface border border-line rounded-lg focus:ring-2 focus:ring-accent focus:border-transparent outline-none transition text-txt placeholder-gray-400";
@@ -230,37 +279,15 @@ export const ReportForm: React.FC<ReportFormProps> = ({
             className="grid grid-cols-2 md:grid-cols-5 gap-2"
             onPaste={async (e) => {
               const items = e.clipboardData.items;
+              const files: File[] = [];
               for (let i = 0; i < items.length; i++) {
                 if (items[i].type.indexOf("image") !== -1) {
                   const blob = items[i].getAsFile();
-                  if (blob) {
-                    setIsUploading(true);
-                    try {
-                      const options = {
-                        maxSizeMB: 1,
-                        maxWidthOrHeight: 1920,
-                        useWebWorker: true
-                      };
-                      const compressedFile = await imageCompression(blob, options);
-                      const publicUrl = await uploadEvidenceImage(compressedFile);
-
-                      if (publicUrl) {
-                        // Use functional update to avoid stale closure if multiple uploads happen fast (though paste is usually one batch)
-                        // Actually, accessing data.photos directly is fine if re-render happens, but let's be safe
-                        // Since onChange is from parent, we might not get immediate update. 
-                        // But for simplicity let's stick to current pattern:
-                        if ((data.photos || []).length < 5) {
-                          onChange('photos', [...(data.photos || []), publicUrl]);
-                        }
-                      }
-                    } catch (error) {
-                      console.error("Erro ao processar imagem:", error);
-                      alert("Erro ao enviar imagem. Tente novamente.");
-                    } finally {
-                      setIsUploading(false);
-                    }
-                  }
+                  if (blob) files.push(blob);
                 }
+              }
+              if (files.length > 0) {
+                processFiles(files);
               }
             }}
           >
@@ -277,11 +304,19 @@ export const ReportForm: React.FC<ReportFormProps> = ({
             ))}
             {(data.photos || []).length < 5 && (
               <div className="aspect-square rounded-md border-2 border-dashed border-gray-300 flex items-center justify-center text-gray-400 hover:text-primary hover:border-primary transition cursor-pointer"
-                onClick={() => {/* Trigger file input if implemented, currently mostly drag/paste */ }}
+                onClick={() => fileInputRef.current?.click()}
               >
                 <span className="text-2xl">+</span>
               </div>
             )}
+            <input
+              type="file"
+              ref={fileInputRef}
+              className="hidden"
+              accept="image/*"
+              multiple
+              onChange={handleCreateFileInput}
+            />
           </div>
           {isUploading && (
             <div className="absolute inset-0 bg-white/50 flex items-center justify-center z-10 rounded-lg backdrop-blur-sm">

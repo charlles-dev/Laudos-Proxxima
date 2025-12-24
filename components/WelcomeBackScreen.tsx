@@ -5,9 +5,10 @@ import { Sparkles, UserCheck } from 'lucide-react';
 interface WelcomeBackOnlyProps {
     name: string;
     onComplete: () => void;
+    isFirstLogin?: boolean;
 }
 
-export const WelcomeBackScreen: React.FC<WelcomeBackOnlyProps> = ({ name, onComplete }) => {
+export const WelcomeBackScreen: React.FC<WelcomeBackOnlyProps> = ({ name, onComplete, isFirstLogin }) => {
     useEffect(() => {
         const timer = setTimeout(() => {
             onComplete();
@@ -57,7 +58,7 @@ export const WelcomeBackScreen: React.FC<WelcomeBackOnlyProps> = ({ name, onComp
                     transition={{ delay: 0.3 }}
                     className="text-4xl md:text-5xl font-bold text-text mb-4"
                 >
-                    Bem-vindo de volta,
+                    {isFirstLogin ? 'Bem-vindo à' : 'Bem-vindo de volta,'}
                 </motion.h1>
 
                 <motion.h2
@@ -66,7 +67,7 @@ export const WelcomeBackScreen: React.FC<WelcomeBackOnlyProps> = ({ name, onComp
                     transition={{ delay: 0.5 }}
                     className="text-3xl md:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent"
                 >
-                    {name.split(' ')[0]} {/* First name only */}
+                    {isFirstLogin ? 'Proxxima Telecom' : name.split(' ')[0]}
                 </motion.h2>
 
                 <motion.div
