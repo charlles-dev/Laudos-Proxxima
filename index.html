@@ -17,6 +17,7 @@
 </script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#2B388C" />
   <link rel="icon" type="image/png" href="/pxx_icon_logo.png" />
   <title>Proxxima - Laudos Técnicos | Gerador de Relatórios Profissionais</title>
 
@@ -47,11 +48,53 @@
   <meta property="twitter:description"
     content="Gerador de laudos técnicos profissionais para equipamentos de telecomunicações.">
   <meta property="twitter:image" content="https://laudos.proxxima.net/pxx_logo.png">
+  <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <link
     href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Dancing+Script:wght@400;500;600;700&display=swap"
     rel="stylesheet">
-
+  <style>
+    /* Definição padrão das cores (Tema Light Inicial) */
+    :root {
+      --color-primary: #2B388C;
+      --color-secondary: #4b5563;
+      --color-accent: #E32085;
+      --color-surface: #f3f4f6;
+      --color-paper: #ffffff;
+      --color-text: #111827;
+      --color-border: #e5e7eb;
+    }
+  </style>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: 'var(--color-primary)',
+            secondary: 'var(--color-secondary)',
+            accent: 'var(--color-accent)',
+            surface: 'var(--color-surface)',
+            paper: 'var(--color-paper)',
+            txt: 'var(--color-text)',
+            line: 'var(--color-border)',
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          keyframes: {
+            fadeIn: {
+              '0%': { opacity: '0', transform: 'translateY(-10px)' },
+              '100%': { opacity: '1', transform: 'translateY(0)' },
+            }
+          },
+          animation: {
+            fadeIn: 'fadeIn 0.2s ease-out',
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="/index.css">
 </head>
 
 <body class="bg-surface text-txt antialiased transition-colors duration-300">

@@ -13,9 +13,12 @@ import {
   Camera
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
+import { SkeletonLoader } from './SkeletonLoader';
 
 interface ReportPreviewProps {
   data: ReportData;
+  isGenerating?: boolean;
+  elementId?: string;
 }
 
 // Cores Oficiais Proxxima (Atualizado)
@@ -26,7 +29,7 @@ const COLORS = {
   border: '#e5e7eb'   // Cinza Claro (Keeping neutral for structure)
 };
 
-export const ReportPreview: React.FC<ReportPreviewProps> = ({ data }) => {
+export const ReportPreview: React.FC<ReportPreviewProps> = ({ data, isGenerating = false, elementId = "report-preview-content" }) => {
 
   // Gerar um ID visual consistente para este render
   const documentId = React.useMemo(() => Math.random().toString(36).substr(2, 9).toUpperCase(), []);
@@ -51,13 +54,13 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ data }) => {
   };
 
   return (
-    <div id="report-preview-content" className="bg-white shadow-2xl mx-auto flex flex-col" style={{ width: '210mm', minHeight: '297mm', padding: '0' }}>
+    <div id={elementId} className="bg-white shadow-2xl mx-auto flex flex-col" style={{ width: '210mm', minHeight: '297mm', padding: '0' }}>
 
       {/* 1. Faixa de Topo Decorativa */}
       <div style={{ height: '8px', backgroundColor: COLORS.accent, width: '100%' }}></div>
 
       {/* 2. Header Corporativo Estilo "Papel Timbrado" */}
-      <div className="px-10 py-8 flex justify-between items-start">
+      <div className="px-10 py-8 flex justify-between items-start" style={{ pageBreakInside: 'avoid' }}>
 
         {/* Coluna Esquerda: Marca e Contato */}
         <div className="flex flex-col gap-3">
@@ -105,7 +108,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ data }) => {
       <div className="px-10 py-8 flex-1">
 
         {/* Identificação do Equipamento */}
-        <div className="mb-8 border rounded-lg overflow-hidden" style={{ borderColor: COLORS.border }}>
+        <div className="mb-8 border rounded-lg overflow-hidden" style={{ borderColor: COLORS.border, pageBreakInside: 'avoid' }}>
           <div className="bg-gray-50 px-4 py-2 border-b flex justify-between items-center" style={{ borderColor: COLORS.border }}>
             <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider">Identificação do Ativo</h3>
             <span className="text-[10px] text-gray-400 uppercase">TI & Infraestrutura</span>
@@ -151,7 +154,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ data }) => {
         <div className="space-y-8">
 
           {/* Defeito */}
-          <div>
+          <div style={{ pageBreakInside: 'avoid' }}>
             <h3
               className="flex items-center gap-2 font-bold uppercase text-sm border-b pb-2 mb-3"
               style={{ color: COLORS.primary, borderColor: COLORS.border }}
@@ -160,12 +163,12 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ data }) => {
               1. Defeito Relatado
             </h3>
             <div className="bg-red-50/50 border-l-4 border-red-500 p-4 text-gray-800 text-sm leading-relaxed text-justify rounded-r-md">
-              {data.reportedDefect || "Aguardando descrição..."}
+              {isGenerating ? <SkeletonLoader /> : (data.reportedDefect || "Aguardando descrição...")}
             </div>
           </div>
 
           {/* Análise */}
-          <div>
+          <div style={{ pageBreakInside: 'avoid' }}>
             <h3
               className="flex items-center gap-2 font-bold uppercase text-sm border-b pb-2 mb-3"
               style={{ color: COLORS.primary, borderColor: COLORS.border }}
@@ -174,12 +177,12 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ data }) => {
               2. Análise Técnica & Diagnóstico
             </h3>
             <div className="px-2">
-              {renderList(data.technicalAnalysis)}
+              {isGenerating ? <SkeletonLoader /> : renderList(data.technicalAnalysis)}
             </div>
           </div>
 
           {/* Solução */}
-          <div>
+          <div style={{ pageBreakInside: 'avoid' }}>
             <h3
               className="flex items-center gap-2 font-bold uppercase text-sm border-b pb-2 mb-3"
               style={{ color: COLORS.primary, borderColor: COLORS.border }}
@@ -188,15 +191,17 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ data }) => {
               3. Parecer Técnico / Solução
             </h3>
             <div className="bg-gray-50 border border-gray-200 p-4 rounded-lg">
-              <p className="text-gray-800 font-medium text-sm leading-relaxed">
-                {data.recommendation || "Aguardando conclusão..."}
-              </p>
+              {isGenerating ? <SkeletonLoader /> : (
+                <p className="text-gray-800 font-medium text-sm leading-relaxed">
+                  {data.recommendation || "Aguardando conclusão..."}
+                </p>
+              )}
             </div>
           </div>
 
           {/* Fotos / Evidências */}
           {data.photos && data.photos.length > 0 && data.photos.some(p => p.trim() !== '') && (
-            <div>
+            <div style={{ pageBreakInside: 'avoid' }}>
               <h3
                 className="flex items-center gap-2 font-bold uppercase text-sm border-b pb-2 mb-3"
                 style={{ color: COLORS.primary, borderColor: COLORS.border }}
@@ -226,7 +231,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ data }) => {
       </div>
 
       {/* Footer / Assinatura */}
-      <div className="mt-auto px-10 pb-12 pt-6">
+      <div id="report-footer" className="mt-auto px-10 pb-12 pt-6 bg-white" style={{ pageBreakInside: 'avoid' }}>
         <div className="grid grid-cols-2 gap-10 items-end">
           <div className="text-xs text-gray-400 flex gap-4 items-center">
             <div className="bg-white p-1">
@@ -260,7 +265,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ data }) => {
       </div>
 
       {/* Faixa decorativa final */}
-      <div className="h-2 w-full mt-4" style={{ backgroundColor: COLORS.primary }}></div>
+      <div className="h-2 w-full mt-4 bg-white" style={{ backgroundColor: COLORS.primary, pageBreakInside: 'avoid' }}></div>
     </div>
   );
 };

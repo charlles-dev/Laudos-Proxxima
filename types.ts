@@ -23,6 +23,8 @@ export interface ReportData {
   date: string;
   fullDescription: string;
   photos?: string[];
+  status?: 'open' | 'in_progress' | 'closed';
+  priority?: 'low' | 'normal' | 'high' | 'critical';
 }
 
 export const INITIAL_DATA: ReportData = {
@@ -37,5 +39,7 @@ export const INITIAL_DATA: ReportData = {
   recommendation: '', // Filled by AI
   technicianName: '',
   date: new Date().toISOString().split('T')[0],
-  fullDescription: ''
+  fullDescription: '',
+  status: 'open',
+  priority: 'normal'
 };

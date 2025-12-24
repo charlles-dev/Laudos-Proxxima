@@ -3,9 +3,10 @@ import { AnimatePresence } from 'framer-motion';
 import { INITIAL_DATA, ReportData } from './types';
 import { ReportForm } from './components/ReportForm';
 import { ReportPreview } from './components/ReportPreview';
+import { PreviewModal } from './components/PreviewModal';
 import { generateTechnicalReport } from './services/aiService';
 import { themes } from './themes';
-import { Download, Mail, Share2, CheckCircle2, Loader2, Moon, Sun, Save, LogOut, User as UserIcon } from 'lucide-react';
+import { Download, Mail, Share2, CheckCircle2, Loader2, Moon, Sun, Save, LogOut, User as UserIcon, Maximize, Minimize, Eye, EyeOff, ChevronLeft } from 'lucide-react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { LoginScreen } from './components/LoginScreen';
 import { saveReport, getUserProfile, updateUserProfile, UserProfile } from './services/supabaseService';
@@ -17,6 +18,9 @@ import { ProfileModal } from './components/ProfileModal';
 import { LandingPage } from './components/LandingPage';
 import { WelcomeBackScreen } from './components/WelcomeBackScreen';
 import { PublicReportViewer } from './components/PublicReportViewer';
+import { useAutoSave } from './hooks/useAutoSave';
+import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
+import html2canvas from 'html2canvas';
 
 const AppContent: React.FC = () => {
   const { currentUser, logout } = useAuth();
@@ -44,15 +48,56 @@ const AppContent: React.FC = () => {
   const [toastMessage, setToastMessage] = useState('');
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
-
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showLanding, setShowLanding] = useState(true);
+
+  // Zen Mode State
+  const [isZenMode, setIsZenMode] = useState(false);
 
   // Tutorial State
   const [runTour, setRunTour] = useState(false);
 
   // Theme State
   const [currentThemeId, setCurrentThemeId] = useState('light');
+
+  // Preview Modal State
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+
+  // Auto Save Hook
+  const { checkDraft, clearDraft } = useAutoSave(data, setData);
+
+  // Check for saved draft on mount (only log for now, or could restore)
+  useEffect(() => {
+    // Logic for checking draft can go here
+  }, [checkDraft]);
+
+  // Shortcuts
+  useKeyboardShortcuts([
+    {
+      key: 's',
+      ctrl: true,
+      action: () => {
+        if (viewMode === 'editor') handleSaveFirestore();
+      },
+      preventDefault: true
+    },
+    {
+      key: 'enter',
+      ctrl: true,
+      action: () => {
+        if (viewMode === 'editor' && !isGenerating) handleGenerateAI();
+      },
+      preventDefault: true
+    },
+    {
+      key: 'escape',
+      action: () => {
+        if (showProfileModal) setShowProfileModal(false);
+        if (showToast) setShowToast(false);
+        if (isZenMode) setIsZenMode(false);
+      }
+    }
+  ]);
 
   // 1. System Theme Detection
   useEffect(() => {
@@ -68,6 +113,14 @@ const AppContent: React.FC = () => {
   useEffect(() => {
     const theme = themes.find(t => t.id === currentThemeId) || themes[0];
     const root = document.documentElement;
+
+    // Toggle 'dark' class for Tailwind
+    if (currentThemeId === 'dark') {
+      root.classList.add('dark');
+    } else {
+      root.classList.remove('dark');
+    }
+
     root.style.setProperty('--color-primary', theme.colors.primary);
     root.style.setProperty('--color-secondary', theme.colors.secondary);
     root.style.setProperty('--color-accent', theme.colors.accent);
@@ -86,7 +139,6 @@ const AppContent: React.FC = () => {
           if (!profile.hasCompletedOnboarding) {
             setShowOnboarding(true);
           } else {
-            // Check if user just logged in (and not just refreshed)
             const isJustLoggedIn = sessionStorage.getItem('just_logged_in');
             if (isJustLoggedIn) {
               setShowWelcome(true);
@@ -94,7 +146,6 @@ const AppContent: React.FC = () => {
             }
           }
         } else {
-          // New user: Create ephemeral profile so UI works
           setUserProfile({
             uid: currentUser.id,
             displayName: currentUser.displayName || '',
@@ -110,7 +161,6 @@ const AppContent: React.FC = () => {
   // 3. Auto-fill technician Name
   useEffect(() => {
     if (userProfile && viewMode === 'editor') {
-      // Only auto-fill if the name is generic or empty to avoid overwriting edits
       if (data.technicianName === 'Técnico Responsável' || data.technicianName === '') {
         setData(prev => ({
           ...prev,
@@ -138,10 +188,8 @@ const AppContent: React.FC = () => {
     setTimeout(() => setShowToast(false), 3000);
   };
 
-  // Onboarding Handler
   const handleOnboardingComplete = async (profileData: Partial<UserProfile>) => {
     if (!currentUser) return;
-
     const newProfile = {
       uid: currentUser.id,
       email: currentUser.email || '',
@@ -149,12 +197,9 @@ const AppContent: React.FC = () => {
       jobTitle: profileData.jobTitle || '',
       hasCompletedOnboarding: true
     };
-
     await updateUserProfile(currentUser.id, newProfile);
     setUserProfile(newProfile);
     setShowOnboarding(false);
-
-    // Start Tutorial
     setTimeout(() => setRunTour(true), 500);
   };
 
@@ -170,7 +215,6 @@ const AppContent: React.FC = () => {
     }
   };
 
-  // Joyride Steps
   const tourSteps: Step[] = [
     {
       target: '.tour-dashboard-header',
@@ -191,14 +235,15 @@ const AppContent: React.FC = () => {
     }
   ];
 
-  // Navigation Actions
   const handleGoToDashboard = () => {
     setViewMode('dashboard');
+    setIsZenMode(false); // Disable Zen Mode when going to dashboard
   };
 
   const handleCreateNew = () => {
     setData(INITIAL_DATA);
     setViewMode('editor');
+    // Check for draft restoration could go here
   };
 
   const handleViewReport = (report: any) => {
@@ -218,15 +263,21 @@ const AppContent: React.FC = () => {
     setData((prev) => ({ ...prev, [key]: value }));
   };
 
+  // Mobile Tabs State
+  const [activeMobileTab, setActiveMobileTab] = useState<'edit' | 'preview'>('edit');
+
   const handleGenerateAI = async () => {
     const hasContent = data.fullDescription.trim();
     if (!hasContent) return;
 
+    setActiveMobileTab('preview');
     setIsGenerating(true);
     try {
       const notes = data.fullDescription;
       const context = `Dispositivo: ${data.deviceType} ${data.model}. Empresa: Proxxima Telecom.`;
-      const result = await generateTechnicalReport(notes, context);
+
+      // Passa fotos para a IA (Visão Computacional)
+      const result = await generateTechnicalReport(notes, context, data.photos, 'técnico'); // Default 'técnico' for now
 
       setData(prev => ({
         ...prev,
@@ -242,26 +293,62 @@ const AppContent: React.FC = () => {
   };
 
   const handleDownloadPDF = async () => {
-    const element = document.getElementById('report-preview-content');
-    if (!element) return;
+    // Target the hidden element instead of the modal one
+    const element = document.getElementById('report-preview-hidden');
+    if (!element) {
+      console.error("Elemento de preview não encontrado");
+      return;
+    }
+
+    const footerElement = element.querySelector('#report-footer') as HTMLElement;
+    if (!footerElement) {
+      console.error("Footer não encontrado");
+      return;
+    }
 
     setIsDownloading(true);
-
     const filename = `LAUDO_PROXXIMA_${data.model.replace(/[^a-zA-Z0-9]/g, '_').toUpperCase()}_${new Date().toISOString().split('T')[0]}.pdf`;
 
-    const opt = {
-      margin: 0,
-      filename: filename,
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-    };
-
     try {
+      // 1. Capture the footer as an image
+      const canvas = await html2canvas(footerElement, { scale: 2, useCORS: true });
+      const footerImgData = canvas.toDataURL('image/png');
+
+      // 2. Hide footer in the DOM content to avoid duplication (we will re-add it manually)
+      const originalDisplay = footerElement.style.display;
+      footerElement.style.display = 'none';
+
+      // 3. Generate PDF with bottom margin for footer
+      const opt = {
+        margin: [0, 0, 40, 0], // Top, Right, Bottom, Left (mm). Added 40mm bottom for footer
+        filename: filename,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
+
       // @ts-ignore
-      await window.html2pdf().set(opt).from(element).save();
+      await window.html2pdf().set(opt).from(element).toPdf().get('pdf').then((pdf) => {
+        const totalPages = pdf.internal.getNumberOfPages();
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const pageHeight = pdf.internal.pageSize.getHeight();
+
+        // Desired footer height in mm
+        const drawnFooterHeight = 35; // slightly less than margin
+
+        for (let i = 1; i <= totalPages; i++) {
+          pdf.setPage(i);
+          // Add footer image at the bottom
+          pdf.addImage(footerImgData, 'PNG', 0, pageHeight - drawnFooterHeight, pageWidth, drawnFooterHeight);
+        }
+      }).save();
+
+      // 4. Restore footer visibility
+      footerElement.style.display = originalDisplay;
+
     } catch (error) {
       console.error("Erro PDF:", error);
+      alert("Erro ao gerar PDF: " + error);
     } finally {
       setIsDownloading(false);
     }
@@ -272,14 +359,11 @@ const AppContent: React.FC = () => {
     setIsSaving(true);
     try {
       await saveReport(currentUser.id, data);
-
-      // Celebration!
       confetti({
         particleCount: 100,
         spread: 70,
         origin: { y: 0.6 }
       });
-
       showNotification("Laudo salvo com sucesso!");
     } catch (error) {
       console.error(error);
@@ -308,7 +392,6 @@ Atenciosamente,
 ${data.technicianName}
 Proxxima Telecom
     `.trim();
-
     window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   };
 
@@ -329,7 +412,6 @@ Proxxima Telecom
   return (
     <div className="min-h-screen flex flex-col h-screen overflow-hidden bg-surface transition-colors duration-300">
 
-      {/* Tutorial Joyride */}
       <Joyride
         steps={tourSteps}
         run={runTour && viewMode === 'dashboard'}
@@ -345,7 +427,6 @@ Proxxima Telecom
         callback={handleJoyrideCallback}
       />
 
-      {/* Profile Modal */}
       {userProfile && (
         <ProfileModal
           isOpen={showProfileModal}
@@ -355,7 +436,6 @@ Proxxima Telecom
         />
       )}
 
-      {/* Onboarding & Welcome Overlay */}
       <AnimatePresence>
         {showOnboarding && (
           <OnboardingScreen onComplete={handleOnboardingComplete} />
@@ -368,111 +448,147 @@ Proxxima Telecom
         )}
       </AnimatePresence>
 
-      {/* Header Corporativo - Adaptação Dark Mode */}
-      <header className="tour-dashboard-header bg-paper border-b border-line h-16 flex items-center justify-between px-6 shrink-0 z-20 shadow-sm relative transition-colors duration-300">
-        <div className="flex items-center gap-4">
-          <div className="p-1 px-2 cursor-pointer" onClick={handleGoToDashboard}>
-            <img
-              src="https://www.proxxima.net/storage/app/uploads/public/5ea/1f7/af7/5ea1f7af72b2c773156463.svg"
-              alt="Proxxima Logo"
-              className="h-8 md:h-10 w-auto object-contain transition-all duration-300"
-            />
+      {/* Header - Hidden in Zen Mode */}
+      {!isZenMode && (
+        <header className="tour-dashboard-header glass-strong border-b border-white/5 h-16 flex items-center justify-between px-6 shrink-0 z-20 shadow-sm relative transition-all duration-300 sticky top-0">
+          <div className="flex items-center gap-4">
+            <div className="p-1 px-2 cursor-pointer" onClick={handleGoToDashboard}>
+              <img
+                src="https://www.proxxima.net/storage/app/uploads/public/5ea/1f7/af7/5ea1f7af72b2c773156463.svg"
+                alt="Proxxima Logo"
+                className="h-8 md:h-10 w-auto object-contain transition-all duration-300"
+              />
+            </div>
+            <div className="hidden md:block h-6 w-px bg-white/10"></div>
+            <h1 className="hidden md:block text-[10px] text-primary font-bold uppercase tracking-widest mt-1">
+              {viewMode === 'dashboard' ? 'Painel de Controle' : 'Gerador de Laudos'}
+            </h1>
           </div>
-          <div className="hidden md:block h-6 w-px bg-line"></div>
-          <h1 className="hidden md:block text-[10px] text-primary font-bold uppercase tracking-widest mt-1">
-            {viewMode === 'dashboard' ? 'Painel de Controle' : 'Gerador de Laudos'}
-          </h1>
-        </div>
 
-        <div className="flex items-center gap-3">
-          {/* Theme Toggle Button */}
-          <button
-            onClick={toggleTheme}
-            className="p-2 hover:bg-surface rounded-full transition text-secondary border border-transparent hover:border-line"
-            title={currentThemeId === 'light' ? "Mudar para Modo Escuro" : "Mudar para Modo Claro"}
-          >
-            {currentThemeId === 'light' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5 text-yellow-400" />}
-          </button>
-
-          {viewMode === 'editor' && (
-            <>
-              <button
-                onClick={toggleTheme}
-                className="p-2 hover:bg-surface rounded-md transition text-secondary hover:text-primary border border-transparent hover:border-line"
-                title={currentThemeId === 'light' ? 'Alternar para Modo Escuro' : 'Alternar para Modo Claro'}
-              >
-                {currentThemeId === 'light' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
-              </button>
-
-              <button
-                onClick={handleSaveFirestore}
-                disabled={isSaving}
-                className="p-2 hover:bg-surface rounded-md transition text-secondary hover:text-primary border border-transparent hover:border-line"
-                title="Salvar Laudo"
-              >
-                {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
-              </button>
-
-              <button
-                onClick={handleCopy}
-                className="p-2 hover:bg-surface rounded-md transition text-secondary hover:text-primary border border-transparent hover:border-line"
-                title="Copiar Resumo"
-              >
-                <Share2 className="w-5 h-5" />
-              </button>
-              <button
-                onClick={handleEmail}
-                className="p-2 hover:bg-surface rounded-md transition text-secondary hover:text-primary border border-transparent hover:border-line"
-                title="Enviar por Email"
-              >
-                <Mail className="w-5 h-5" />
-              </button>
-
-              <button
-                onClick={handleDownloadPDF}
-                disabled={isDownloading}
-                className="flex items-center gap-2 px-4 py-2 bg-primary hover:opacity-90 text-white rounded shadow-sm transition text-sm font-semibold disabled:opacity-50"
-              >
-                {isDownloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-                <span>Gerar PDF</span>
-              </button>
-            </>
-          )}
-
-          <div className="h-6 w-px bg-line mx-1"></div>
-
-          {/* Back Button (Only in Editor) */}
-          {viewMode === 'editor' && (
+          <div className="flex items-center gap-3">
             <button
-              onClick={handleGoToDashboard}
-              className="p-2 bg-secondary/10 hover:bg-secondary/20 text-secondary rounded-md transition border border-transparent text-xs font-semibold px-3"
+              onClick={toggleTheme}
+              className="p-2 hover:bg-white/10 rounded-full transition text-secondary border border-transparent hover:border-white/10"
+              title={currentThemeId === 'light' ? "Mudar para Modo Escuro" : "Mudar para Modo Claro"}
             >
-              Voltar
+              {currentThemeId === 'light' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5 text-yellow-400" />}
             </button>
-          )}
 
-          {/* User Profile Button */}
-          <button
-            onClick={() => setShowProfileModal(true)}
-            className="p-2 hover:bg-surface text-secondary hover:text-primary rounded-md transition border border-transparent"
-            title="Meu Perfil"
-          >
-            <UserIcon className="w-5 h-5" />
-          </button>
+            {viewMode === 'editor' && (
+              <>
+                <div className="h-6 w-px bg-white/10 mx-1"></div>
 
-          {/* Logout (Visible in Dashboard mostly, but kept in header) */}
+                {/* Zen Mode Toggle */}
+                <button
+                  onClick={() => setIsZenMode(true)}
+                  className="p-2 hover:bg-white/10 rounded-md transition text-secondary hover:text-primary border border-transparent hover:border-white/10"
+                  title="Modo Zen (Foco)"
+                >
+                  <Maximize className="w-5 h-5" />
+                </button>
+
+
+
+                <button
+                  onClick={handleSaveFirestore}
+                  disabled={isSaving}
+                  className="p-2 hover:bg-white/10 rounded-md transition text-secondary hover:text-primary border border-transparent hover:border-white/10"
+                  title="Salvar Laudo (Ctrl+S)"
+                >
+                  {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
+                </button>
+
+                <button
+                  onClick={handleCopy}
+                  className="p-2 hover:bg-white/10 rounded-md transition text-secondary hover:text-primary border border-transparent hover:border-white/10"
+                  title="Copiar Resumo"
+                >
+                  <Share2 className="w-5 h-5" />
+                </button>
+                <button
+                  onClick={handleEmail}
+                  className="p-2 hover:bg-white/10 rounded-md transition text-secondary hover:text-primary border border-transparent hover:border-white/10"
+                  title="Enviar por Email"
+                >
+                  <Mail className="w-5 h-5" />
+                </button>
+
+                <button
+                  onClick={handleDownloadPDF}
+                  disabled={isDownloading}
+                  className="flex items-center gap-2 px-4 py-2 bg-primary hover:opacity-90 text-white rounded shadow-sm transition text-sm font-semibold disabled:opacity-50"
+                  title="Gerar PDF"
+                >
+                  {isDownloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+                  <span>Gerar PDF</span>
+                </button>
+              </>
+            )}
+
+            <div className="h-6 w-px bg-white/10 mx-1"></div>
+
+            {viewMode === 'editor' && (
+              <button
+                onClick={handleGoToDashboard}
+                className="p-2 bg-secondary/10 hover:bg-secondary/20 text-secondary rounded-md transition border border-transparent text-xs font-semibold px-3"
+              >
+                Voltar
+              </button>
+            )}
+
+            <button
+              onClick={() => setShowProfileModal(true)}
+              className="p-2 hover:bg-white/10 text-secondary hover:text-primary rounded-md transition border border-transparent"
+              title="Meu Perfil"
+            >
+              <UserIcon className="w-5 h-5" />
+            </button>
+
+            <button
+              onClick={handleLogout}
+              className="p-2 hover:bg-red-500/10 text-secondary hover:text-red-500 rounded-md transition border border-transparent"
+              title="Sair"
+            >
+              <LogOut className="w-5 h-5" />
+            </button>
+          </div>
+        </header>
+      )}
+
+      {/* Zen Mode Exit Button (Floating) */}
+      {isZenMode && (
+        <div className="absolute top-4 right-6 z-50">
           <button
-            onClick={handleLogout}
-            className="p-2 hover:bg-red-50 text-secondary hover:text-red-500 rounded-md transition border border-transparent"
-            title="Sair"
+            onClick={() => setIsZenMode(false)}
+            className="p-2 bg-black/20 hover:bg-black/40 text-secondary rounded-full backdrop-blur-sm transition"
+            title="Sair do Modo Zen (Esc)"
           >
-            <LogOut className="w-5 h-5" />
+            <Minimize className="w-6 h-6" />
           </button>
         </div>
-      </header>
+      )}
+
+      {/* Mobile Tabs */}
+      {!isZenMode && viewMode === 'editor' && (
+        <div className="md:hidden flex border-b border-white/5 bg-paper shrink-0">
+          <button
+            onClick={() => setActiveMobileTab('edit')}
+            className={`flex-1 py-3 text-sm font-medium transition-colors relative ${activeMobileTab === 'edit' ? 'text-primary' : 'text-secondary'}`}
+          >
+            Editar
+            {activeMobileTab === 'edit' && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-primary animate-fade-in" />}
+          </button>
+          <button
+            onClick={() => setActiveMobileTab('preview')}
+            className={`flex-1 py-3 text-sm font-medium transition-colors relative ${activeMobileTab === 'preview' ? 'text-primary' : 'text-secondary'}`}
+          >
+            Visualizar
+            {activeMobileTab === 'preview' && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-primary animate-fade-in" />}
+          </button>
+        </div>
+      )}
 
       {/* Main Content Areas */}
-
       {viewMode === 'dashboard' ? (
         <Dashboard
           onCreateNew={handleCreateNew}
@@ -480,33 +596,53 @@ Proxxima Telecom
           onCloneReport={handleCloneReport}
         />
       ) : (
-        <main className="flex-1 flex overflow-hidden relative">
+        <main className="flex-1 flex overflow-hidden relative justify-center bg-surface">
 
-          {/* Sidebar Esquerda: Formulário */}
-          <div className="w-full md:w-[450px] lg:w-[480px] shrink-0 p-0 overflow-hidden border-r border-line bg-paper z-10 flex flex-col shadow-xl transition-colors duration-300">
-            <div className="p-6 overflow-y-auto h-full scrollbar-thin">
-              <ReportForm
-                data={data}
-                onChange={handleDataChange}
-                onGenerateAI={handleGenerateAI}
-                isGenerating={isGenerating}
-              />
-            </div>
+          <div className="w-full max-w-5xl p-4 md:p-8 h-full flex flex-col">
+            {/* Zen Mode Header Override if needed */}
+            {isZenMode && <h2 className="text-2xl font-bold text-primary mb-6 text-center">Modo Foco 🧘</h2>}
+
+            <ReportForm
+              data={data}
+              onChange={handleDataChange}
+              onGenerateAI={handleGenerateAI}
+              isGenerating={isGenerating}
+              onSave={handleSaveFirestore}
+              onPrint={handleDownloadPDF}
+              onEmail={handleEmail}
+              onPreview={() => setIsPreviewOpen(true)}
+            />
           </div>
 
-          {/* Área Principal: Preview */}
-          <div className="flex-1 overflow-auto p-8 flex justify-center items-start">
-            <div className="origin-top scale-[0.75] lg:scale-[0.85] xl:scale-100 transition-all shadow-2xl mt-4">
-              <ReportPreview data={data} />
-            </div>
-          </div>
+          <PreviewModal
+            isOpen={isPreviewOpen}
+            onClose={() => setIsPreviewOpen(false)}
+            data={data}
+          />
 
         </main>
       )}
 
-      {/* Toast Notification */}
+      {/* Hidden Report Preview for PDF Generation */}
+      {viewMode === 'editor' && (
+        <div style={{ position: 'fixed', left: '-9999px', top: 0 }}>
+          <ReportPreview
+            data={data}
+            isGenerating={false}
+            elementId="report-preview-hidden"
+          />
+        </div>
+      )}
+      {/* 
+        Wait, I can't easily change ReportPreview props without checking usage.
+        It is used in PreviewModal as well.
+        
+        Let's modify ReportPreview to accept an optional `elementId` prop.
+        Default it to 'report-preview-content'.
+      */}
+
       {showToast && (
-        <div className="fixed bottom-6 right-6 bg-primary text-white px-4 py-3 rounded-lg shadow-xl flex items-center gap-3 animate-fade-in-up z-50 border border-white/10">
+        <div className="fixed bottom-6 right-6 glass-strong text-white px-4 py-3 rounded-lg shadow-xl flex items-center gap-3 animate-fade-in-up z-50 border border-white/10">
           <CheckCircle2 className="w-5 h-5 text-accent" />
           <span className="text-sm font-medium">{toastMessage}</span>
         </div>

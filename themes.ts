@@ -17,12 +17,12 @@ export const themes: Theme[] = [
     id: 'light',
     name: 'Claro',
     colors: {
-      primary: 'var(--proxxima-disco)', // #9B2071
-      secondary: 'var(--proxxima-tundora)', // #444444 (Text)
-      accent: 'var(--proxxima-cerise)', // #CD2784
+      primary: '#E32085', // Pink Proxxima
+      secondary: '#2B388C', // Blue Proxxima
+      accent: '#2B388C', // Using Blue as accent in Light mode
       surface: 'var(--whitesmoke-100)',
       paper: 'var(--white-100)',
-      text: 'var(--proxxima-tundora)',
+      text: '#1e293b',
       border: 'var(--lightgray-200)'
     }
   },
@@ -30,13 +30,13 @@ export const themes: Theme[] = [
     id: 'dark',
     name: 'Escuro',
     colors: {
-      primary: 'var(--proxxima-disco)',
-      secondary: '#a0a0a0', // Adjusted for dark mode readability
-      accent: 'var(--proxxima-cerise)',
-      surface: 'rgb(20, 10, 25)', // Deep Purple Background
-      paper: '#1a1a1a',
-      text: '#e0e0e0',
-      border: '#333'
+      primary: '#E32085', // Pink Proxxima
+      secondary: '#94a3b8',
+      accent: '#2B388C', // Blue Proxxima
+      surface: '#0f172a',
+      paper: '#1e293b',
+      text: '#f1f5f9',
+      border: '#334155'
     }
   }
 ];

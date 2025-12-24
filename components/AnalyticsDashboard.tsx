@@ -53,10 +53,47 @@ export const AnalyticsDashboard: React.FC<AnalyticsProps> = ({ reports }) => {
         return Object.keys(counts).map(date => ({ date, count: counts[date] })).reverse();
     }, [reports]);
 
+    // 4. Technician Leaderboard
+    const leaderboardData = useMemo(() => {
+        const counts: Record<string, number> = {};
+        reports.forEach(r => {
+            const tech = r.technicianName || "Não Atribuído";
+            counts[tech] = (counts[tech] || 0) + 1;
+        });
+        return Object.entries(counts)
+            .sort(([, a], [, b]) => b - a)
+            .map(([name, value], index) => ({ name, value, rank: index + 1 }));
+    }, [reports]);
+
+    // 5. Productivity Goal (Monthly)
+    const productivityGoal = 50; // Hardcoded goal
+    const currentMonthCount = useMemo(() => {
+        const now = new Date();
+        return reports.filter(r => {
+            if (!r.createdAt) return false;
+            const d = new Date(r.createdAt);
+            return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+        }).length;
+    }, [reports]);
+    const goalProgress = Math.min((currentMonthCount / productivityGoal) * 100, 100);
+
+    // 6. Average Resolution Time (Mock/Approximate)
+    // Since we don't have "closedAt", we will use a simple "Reports Closed vs Open" ratio or specific efficiency stat
+    const efficiencyStats = useMemo(() => {
+        const closed = reports.filter(r => r.status === 'closed').length;
+        const total = reports.length || 1;
+        const closureRate = (closed / total) * 100;
+
+        // Find fastest technician (mock logic or real if we had data, here just top tech)
+        const topTech = leaderboardData[0]?.name || "-";
+
+        return { closureRate, topTech };
+    }, [reports, leaderboardData]);
+
     return (
         <div className="space-y-6 animate-fade-in-up">
             {/* KPI Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div className="bg-paper border border-line p-4 rounded-xl shadow-sm flex items-center justify-between">
                     <div>
                         <p className="text-secondary text-xs uppercase font-bold tracking-wider">Total de Laudos</p>
@@ -77,13 +114,72 @@ export const AnalyticsDashboard: React.FC<AnalyticsProps> = ({ reports }) => {
                 </div>
                 <div className="bg-paper border border-line p-4 rounded-xl shadow-sm flex items-center justify-between">
                     <div>
-                        <p className="text-secondary text-xs uppercase font-bold tracking-wider">Produtividade (Hoje)</p>
+                        <p className="text-secondary text-xs uppercase font-bold tracking-wider">Laudos (Mês Atual)</p>
                         <h3 className="text-3xl font-bold text-green-500 mt-1">
-                            {timelineData.length > 0 ? timelineData[timelineData.length - 1].count : 0}
+                            {currentMonthCount}
                         </h3>
                     </div>
                     <div className="p-3 bg-green-500/10 rounded-full">
                         <TrendingUp className="w-6 h-6 text-green-500" />
+                    </div>
+                </div>
+                <div className="bg-paper border border-line p-4 rounded-xl shadow-sm flex items-center justify-between">
+                    <div>
+                        <p className="text-secondary text-xs uppercase font-bold tracking-wider">Taxa de Conclusão</p>
+                        <h3 className="text-3xl font-bold text-blue-500 mt-1">
+                            {efficiencyStats.closureRate.toFixed(0)}%
+                        </h3>
+                    </div>
+                    <div className="p-3 bg-blue-500/10 rounded-full">
+                        <BarChart3 className="w-6 h-6 text-blue-500" />
+                    </div>
+                </div>
+            </div>
+
+            {/* Productivity & Goals */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Monthly Goal */}
+                <div className="md:col-span-1 bg-paper border border-line p-6 rounded-xl shadow-sm flex flex-col justify-center">
+                    <h4 className="text-md font-bold text-text mb-2">Meta Mensal</h4>
+                    <div className="flex items-end justify-between mb-2">
+                        <span className="text-3xl font-bold text-primary">{currentMonthCount}</span>
+                        <span className="text-sm text-secondary mb-1">/ {productivityGoal} laudos</span>
+                    </div>
+                    <div className="w-full bg-surface rounded-full h-3 overflow-hidden">
+                        <div
+                            className="bg-gradient-to-r from-primary to-blue-400 h-full rounded-full transition-all duration-1000"
+                            style={{ width: `${goalProgress}%` }}
+                        ></div>
+                    </div>
+                    <p className="text-xs text-secondary mt-3">
+                        {goalProgress >= 100 ? "Meta atingida! 🚀" : `Faltam ${productivityGoal - currentMonthCount} laudos para a meta.`}
+                    </p>
+                </div>
+
+                {/* Technician Leaderboard */}
+                <div className="md:col-span-2 bg-paper border border-line p-6 rounded-xl shadow-sm">
+                    <h4 className="text-md font-bold text-text mb-4">Ranking Técnico</h4>
+                    <div className="space-y-3">
+                        {leaderboardData.slice(0, 3).map((tech, idx) => (
+                            <div key={tech.name} className="flex items-center gap-4">
+                                <div className={`flex items-center justify-center w-8 h-8 rounded-full font-bold text-sm ${idx === 0 ? 'bg-yellow-100 text-yellow-600' : idx === 1 ? 'bg-gray-100 text-gray-600' : 'bg-orange-100 text-orange-600'}`}>
+                                    {tech.rank}
+                                </div>
+                                <div className="flex-1">
+                                    <div className="flex justify-between items-center mb-1">
+                                        <span className="font-medium text-text">{tech.name}</span>
+                                        <span className="text-sm font-semibold text-primary">{tech.value} laudos</span>
+                                    </div>
+                                    <div className="w-full bg-surface rounded-full h-2">
+                                        <div
+                                            className={`h-full rounded-full ${idx === 0 ? 'bg-yellow-400' : idx === 1 ? 'bg-gray-400' : 'bg-orange-400'}`}
+                                            style={{ width: `${(tech.value / (leaderboardData[0].value || 1)) * 100}%` }}
+                                        ></div>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                        {leaderboardData.length === 0 && <p className="text-secondary text-sm">Sem dados de técnicos.</p>}
                     </div>
                 </div>
             </div>

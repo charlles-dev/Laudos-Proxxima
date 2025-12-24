@@ -1,5 +1,6 @@
 import { supabase } from './supabaseClient';
 import { ReportData } from '../types';
+import { v4 as uuidv4 } from 'uuid';
 
 // Types
 export interface SavedReport extends ReportData {
@@ -14,6 +15,7 @@ export interface UserProfile {
     displayName: string;
     jobTitle: string;
     hasCompletedOnboarding: boolean;
+    role?: 'admin' | 'user' | 'tech'; // Added role
 }
 
 export interface ActivityLog {
@@ -43,7 +45,9 @@ export const saveReport = async (userId: string, data: ReportData) => {
                 technician_name: data.technicianName,
                 requester_name: data.requesterName,
                 requester_sector: data.requesterSector,
-                photos: data.photos || []
+                photos: data.photos || [],
+                status: data.status || 'open',
+                priority: data.priority || 'normal'
             })
             .select()
             .single();
@@ -54,6 +58,65 @@ export const saveReport = async (userId: string, data: ReportData) => {
         return result.id;
     } catch (error) {
         console.error("Erro ao salvar laudo no Supabase:", error);
+        throw error;
+    }
+};
+
+export const updateReport = async (reportId: string, updates: Partial<ReportData>) => {
+    try {
+        const { error } = await supabase
+            .from('reports')
+            .update({
+                model: updates.model,
+                serial_number: updates.serialNumber,
+                patrimony_id: updates.patrimonyId,
+                device_type: updates.deviceType,
+                full_description: updates.fullDescription,
+                reported_defect: updates.reportedDefect,
+                technical_analysis: updates.technicalAnalysis,
+                recommendation: updates.recommendation,
+                technician_name: updates.technicianName,
+                requester_name: updates.requesterName,
+                requester_sector: updates.requesterSector,
+                photos: updates.photos,
+                status: updates.status,
+                priority: updates.priority
+            })
+            .eq('id', reportId);
+
+        if (error) throw error;
+    } catch (error) {
+        console.error("Erro ao atualizar laudo:", error);
+        throw error;
+    }
+};
+
+
+
+export const deleteReport = async (reportId: string) => {
+    try {
+        const { error } = await supabase
+            .from('reports')
+            .delete()
+            .eq('id', reportId);
+
+        if (error) throw error;
+    } catch (error) {
+        console.error("Erro ao deletar laudo:", error);
+        throw error;
+    }
+};
+
+export const deleteReports = async (reportIds: string[]) => {
+    try {
+        const { error } = await supabase
+            .from('reports')
+            .delete()
+            .in('id', reportIds);
+
+        if (error) throw error;
+    } catch (error) {
+        console.error("Erro ao deletar múltiplos laudos:", error);
         throw error;
     }
 };
@@ -125,6 +188,29 @@ export const getPublicReport = async (reportId: string) => {
     }
 };
 
+export const getClients = async (query: string) => {
+    try {
+        // Busca nomes distintos na tabela de reports que coincidam com a query
+        // Supabase não tem SELECT DISTINCT simples via JS SDK antigo, mas podemos usar .rpc ou just raw select e filter
+        // Uma abordagem melhor para scale é ter uma tabela 'clients', mas por enquanto vamos extrair dos reports
+
+        const { data, error } = await supabase
+            .from('reports')
+            .select('requester_name')
+            .ilike('requester_name', `%${query}%`)
+            .limit(50);
+
+        if (error) throw error;
+
+        // Filtrar únicos no lado do cliente (simples para <1000 records, ideal seria RPC)
+        const uniqueNames = Array.from(new Set(data.map(item => item.requester_name)));
+        return uniqueNames.slice(0, 5); // Retorna top 5
+    } catch (error) {
+        console.error("Erro ao buscar clientes:", error);
+        return [];
+    }
+};
+
 // --- Profiles ---
 
 export const getUserProfile = async (userId: string): Promise<UserProfile | null> => {
@@ -142,7 +228,8 @@ export const getUserProfile = async (userId: string): Promise<UserProfile | null
             email: data.email,
             displayName: data.display_name,
             jobTitle: data.job_title,
-            hasCompletedOnboarding: data.has_completed_onboarding
+            hasCompletedOnboarding: data.has_completed_onboarding,
+            role: data.role || 'tech' // Default to tech
         };
     } catch (error) {
         console.error("Erro ao buscar perfil:", error);
@@ -225,5 +312,33 @@ const mapReportFromDB = (dbItem: any): SavedReport => ({
     requesterName: dbItem.requester_name,
     requesterSector: dbItem.requester_sector || '',
     photos: dbItem.photos || [],
+    status: dbItem.status || 'open',
+    priority: dbItem.priority || 'normal',
     date: new Date(dbItem.created_at).toISOString().split('T')[0]
 });
+
+export const uploadEvidenceImage = async (file: File): Promise<string | null> => {
+    try {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${uuidv4()}.${fileExt}`;
+        const filePath = `uploads/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+            .from('evidences')
+            .upload(filePath, file);
+
+        if (uploadError) {
+            console.error("Supabase Storage Upload Error:", uploadError);
+            throw uploadError;
+        }
+
+        const { data } = supabase.storage
+            .from('evidences')
+            .getPublicUrl(filePath);
+
+        return data.publicUrl;
+    } catch (error) {
+        console.error('Erro ao fazer upload da imagem:', error);
+        return null;
+    }
+};
