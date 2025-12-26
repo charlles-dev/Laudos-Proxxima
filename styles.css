@@ -160,3 +160,113 @@
         background-position: 0% 50%;
     }
 }
+
+@layer base {
+
+    /* Custom Checkbox */
+    input[type="checkbox"] {
+        appearance: none;
+        -webkit-appearance: none;
+        background-color: var(--color-surface);
+        /* Context dependent, usually surface is lighter/different than paper */
+        margin: 0;
+        font: inherit;
+        color: currentColor;
+        width: 1.25em;
+        /* Slightly larger */
+        height: 1.25em;
+        border: 2px solid var(--color-secondary);
+        /* Using secondary (Blue/Grey) for better visibility */
+        border-radius: 0.35em;
+        display: inline-grid;
+        place-content: center;
+        cursor: pointer;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        opacity: 0.8;
+    }
+
+    input[type="checkbox"]:hover {
+        opacity: 1;
+        border-color: var(--proxxima-cerise);
+    }
+
+    input[type="checkbox"]::before {
+        content: "";
+        width: 0.75em;
+        height: 0.75em;
+        transform: scale(0);
+        transition: 150ms transform cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: inset 1em 1em white;
+        transform-origin: center;
+        clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+    }
+
+    input[type="checkbox"]:checked {
+        background-color: var(--proxxima-cerise);
+        border-color: var(--proxxima-cerise);
+    }
+
+    input[type="checkbox"]:checked::before {
+        transform: scale(1);
+    }
+
+    input[type="checkbox"]:focus {
+        outline: 2px solid var(--proxxima-cerise);
+        outline-offset: 2px;
+    }
+
+    /* Custom Select Dropdown (Global) */
+    select {
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+        background-position: right 0.5rem center;
+        background-repeat: no-repeat;
+        background-size: 1.5em 1.5em;
+        padding-right: 2.5rem;
+        print-color-adjust: exact;
+        appearance: none;
+    }
+
+    .dark select {
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%239ca3af' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    }
+
+    /* Custom Date Input */
+    input[type="date"] {
+        appearance: none;
+        background-color: var(--color-surface);
+        border: 1px solid var(--color-border);
+        border-radius: 0.5rem;
+        padding: 0.5rem 1rem;
+        color: var(--color-text);
+        font-family: inherit;
+        position: relative;
+        cursor: pointer;
+    }
+
+    /* Calendar Icon styling for Webkit */
+    input[type="date"]::-webkit-calendar-picker-indicator {
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23E32085' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3crect x='3' y='4' width='18' height='18' rx='2' ry='2'/%3e%3cline x1='16' y1='2' x2='16' y2='6'/%3e%3cline x1='8' y1='2' x2='8' y2='6'/%3e%3cline x1='3' y1='10' x2='21' y2='10'/%3e%3c/svg%3e");
+        cursor: pointer;
+        opacity: 0.8;
+        transition: opacity 0.2s;
+    }
+
+    input[type="date"]::-webkit-calendar-picker-indicator:hover {
+        opacity: 1;
+    }
+
+    /* Date Input Dark Mode Adaptation */
+    .dark input[type="date"] {
+        color-scheme: dark;
+    }
+
+    /* Global Focus State for consistent branding */
+    input:focus,
+    select:focus,
+    textarea:focus {
+        outline: none;
+        border-color: var(--proxxima-cerise);
+        box-shadow: 0 0 0 2px rgba(227, 32, 133, 0.2);
+        /* Ring effect */
+    }
+}

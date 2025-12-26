@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { Input } from './ui/input';
 import { Search } from 'lucide-react';
 import { getClients } from '../services/supabaseService';
 
@@ -54,13 +55,13 @@ export const ClientAutocomplete: React.FC<ClientAutocompleteProps> = ({
 
     return (
         <div className="relative" ref={wrapperRef}>
-            <input
+            <Input
                 type="text"
                 name={name}
                 value={value}
                 onChange={handleInput}
                 onFocus={() => value.length > 2 && setShowSuggestions(true)}
-                className="w-full px-3 py-2 bg-surface border border-line rounded-md focus:ring-2 focus:ring-accent focus:border-transparent outline-none transition text-txt placeholder-gray-400"
+                className="w-full"
                 placeholder={placeholder}
                 autoComplete="off"
             />

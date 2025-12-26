@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { SavedReport, getReports, getAllReports, getReportById, getUserProfile, deleteReports, updateReport } from '../services/supabaseService';
-import { Plus, Search, FileText, BarChart2, List, Copy, Download, Loader2, Eye, LayoutGrid, Table as TableIcon, Trash2, CheckSquare, XSquare, Share2 } from 'lucide-react';
+import { Plus, Search, FileText, BarChart2, List, Copy, Download, Loader2, Eye, LayoutGrid, Table as TableIcon, Trash2, CheckSquare, XSquare, Share2, Filter, AlertTriangle, CheckCircle, Clock } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { AnalyticsDashboard } from './AnalyticsDashboard';
 import { ActivityLog } from './ActivityLog';
 import { KanbanBoard } from './KanbanBoard';
@@ -240,7 +241,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ onCreateNew, onViewReport,
                     type="checkbox"
                     checked={selectedIds.has(report.id)}
                     onChange={() => toggleSelection(report.id)}
-                    className="w-4 h-4 text-primary border-line rounded focus:ring-primary cursor-pointer"
                 />
             </td>
             <td className="px-6 py-4 whitespace-nowrap text-sm text-secondary">
@@ -258,21 +258,31 @@ export const Dashboard: React.FC<DashboardProps> = ({ onCreateNew, onViewReport,
             <td className="px-6 py-4 whitespace-nowrap text-sm text-secondary">
                 {report.reportedDefect && report.reportedDefect.length > 20 ? report.reportedDefect.slice(0, 20) + '...' : report.reportedDefect}
             </td>
-            <td className="px-6 py-4 whitespace-nowrap text-xs">
-                <span className={`px-2 py-1 rounded-full font-semibold ${report.status === 'open' ? 'bg-blue-100/10 text-blue-500 border border-blue-500/20' :
-                    report.status === 'in_progress' ? 'bg-yellow-100/10 text-yellow-500 border border-yellow-500/20' :
-                        'bg-green-100/10 text-green-500 border border-green-500/20'
-                    }`}>
-                    {report.status === 'open' ? 'Aberto' : report.status === 'in_progress' ? 'Em Análise' : 'Fechado'}
-                </span>
+
+            <td className="px-6 py-4 whitespace-nowrap text-sm text-text font-medium">
+                {report.technicianName ? report.technicianName.split(' ').slice(0, 2).join(' ') : '-'}
             </td>
             <td className="px-6 py-4 whitespace-nowrap text-xs">
-                {report.priority === 'high' || report.priority === 'critical' ? (
-                    <span className="px-2 py-1 rounded-full font-semibold bg-red-100/10 text-red-500 border border-red-500/20">Urgente</span>
-                ) : (
-                    <span className="text-secondary">-</span>
-                )}
+                <div onClick={(e) => e.stopPropagation()}>
+                    <Select value={report.status || 'open'} onValueChange={(val) => handleUpdateStatus(report.id, val as any)}>
+                        <SelectTrigger className="w-36 h-8 text-xs">
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="open">
+                                <span className="text-blue-500">Aberto</span>
+                            </SelectItem>
+                            <SelectItem value="in_progress">
+                                <span className="text-yellow-500">Em Análise</span>
+                            </SelectItem>
+                            <SelectItem value="closed">
+                                <span className="text-green-500">Fechado</span>
+                            </SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
             </td>
+
         </tr>
     );
 
@@ -283,7 +293,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onCreateNew, onViewReport,
             <div className="w-full max-w-6xl h-full flex flex-col">
 
                 {/* Top Controls */}
-                <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4 shrink-0">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 shrink-0">
                     <div>
                         <h2 className="text-2xl font-bold text-text">Painel de Controle</h2>
                         <p className="text-secondary text-sm">
@@ -303,7 +313,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ onCreateNew, onViewReport,
                 </div>
 
                 {/* Tabs & Search Bar Row */}
-                <div className="flex flex-col md:flex-row justify-between items-end border-b border-line mb-6 gap-4">
+                {/* Tabs & Search Bar Row */}
+                <div className="flex flex-col md:flex-row justify-between items-center border-b border-line mb-6 gap-4">
 
                     {/* Tabs */}
                     <div className="flex items-center gap-4 overflow-x-auto w-full md:w-auto">
@@ -393,44 +404,72 @@ export const Dashboard: React.FC<DashboardProps> = ({ onCreateNew, onViewReport,
                     <div className="bg-paper border border-line p-4 rounded-xl mb-6 grid grid-cols-1 md:grid-cols-4 gap-4 animate-fade-in-down shadow-sm">
                         <div className="flex flex-col gap-1">
                             <label className="text-xs font-semibold text-secondary uppercase">Status</label>
-                            <select
-                                value={statusFilter}
-                                onChange={(e) => setStatusFilter(e.target.value)}
-                                className="bg-surface border border-line rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none"
-                            >
-                                <option value="all">Todos</option>
-                                <option value="open">Em Aberto</option>
-                                <option value="in_progress">Em Análise</option>
-                                <option value="closed">Fechado</option>
-                            </select>
+                            <Select value={statusFilter} onValueChange={setStatusFilter}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Status" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">Todos</SelectItem>
+                                    <SelectItem value="open">
+                                        <div className="flex items-center gap-2">
+                                            <AlertTriangle className="w-4 h-4 text-blue-500" />
+                                            <span>Em Aberto</span>
+                                        </div>
+                                    </SelectItem>
+                                    <SelectItem value="in_progress">
+                                        <div className="flex items-center gap-2">
+                                            <Clock className="w-4 h-4 text-yellow-500" />
+                                            <span>Em Análise</span>
+                                        </div>
+                                    </SelectItem>
+                                    <SelectItem value="closed">
+                                        <div className="flex items-center gap-2">
+                                            <CheckCircle className="w-4 h-4 text-green-500" />
+                                            <span>Fechado</span>
+                                        </div>
+                                    </SelectItem>
+                                </SelectContent>
+                            </Select>
                         </div>
 
                         <div className="flex flex-col gap-1">
                             <label className="text-xs font-semibold text-secondary uppercase">Prioridade</label>
-                            <select
-                                value={priorityFilter}
-                                onChange={(e) => setPriorityFilter(e.target.value)}
-                                className="bg-surface border border-line rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none"
-                            >
-                                <option value="all">Todas</option>
-                                <option value="normal">Normal</option>
-                                <option value="high">Alta</option>
-                                <option value="critical">Crítica</option>
-                            </select>
+                            <Select value={priorityFilter} onValueChange={setPriorityFilter}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Prioridade" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">Todas</SelectItem>
+                                    <SelectItem value="normal">Normal</SelectItem>
+                                    <SelectItem value="high">
+                                        <div className="flex items-center gap-2">
+                                            <AlertTriangle className="w-4 h-4 text-red-500" />
+                                            <span>Alta</span>
+                                        </div>
+                                    </SelectItem>
+                                    <SelectItem value="critical">
+                                        <div className="flex items-center gap-2">
+                                            <AlertTriangle className="w-4 h-4 text-red-700" />
+                                            <span>Crítica</span>
+                                        </div>
+                                    </SelectItem>
+                                </SelectContent>
+                            </Select>
                         </div>
 
                         <div className="flex flex-col gap-1">
                             <label className="text-xs font-semibold text-secondary uppercase">Período</label>
-                            <select
-                                value={dateFilter}
-                                onChange={(e) => setDateFilter(e.target.value)}
-                                className="bg-surface border border-line rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none"
-                            >
-                                <option value="all">Todo o período</option>
-                                <option value="today">Hoje</option>
-                                <option value="week">Últimos 7 dias</option>
-                                <option value="month">Últimos 30 dias</option>
-                            </select>
+                            <Select value={dateFilter} onValueChange={setDateFilter}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Período" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">Todo o período</SelectItem>
+                                    <SelectItem value="today">Hoje</SelectItem>
+                                    <SelectItem value="week">Últimos 7 dias</SelectItem>
+                                    <SelectItem value="month">Últimos 30 dias</SelectItem>
+                                </SelectContent>
+                            </Select>
                         </div>
 
                         <div className="flex items-end">
@@ -449,7 +488,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onCreateNew, onViewReport,
                 {/* Floating Bulk Action Bar */}
                 {/* Floating Bulk Action Bar */}
                 {selectedIds.size > 0 && (
-                    <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-paper/95 backdrop-blur-sm text-text px-6 py-3 rounded-full shadow-2xl z-50 flex items-center gap-6 animate-fade-in-up border border-line">
+                    <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-paper/95 backdrop-blur-sm text-text px-4 py-2 rounded-full shadow-2xl z-50 flex items-center gap-4 animate-fade-in-up border border-line">
                         <span className="font-semibold text-sm">{selectedIds.size} selecionado(s)</span>
 
                         <div className="h-4 w-px bg-line"></div>
@@ -537,7 +576,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onCreateNew, onViewReport,
                 )}
 
                 {/* Content Area */}
-                <div className="flex-1 overflow-auto">
+                <div className="flex-1 overflow-auto pr-2">
                     {loading ? (
                         <div className="flex items-center justify-center h-40">
                             <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -556,16 +595,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ onCreateNew, onViewReport,
                                                                 type="checkbox"
                                                                 checked={filteredReports.length > 0 && selectedIds.size === filteredReports.length}
                                                                 onChange={toggleAll}
-                                                                className="w-4 h-4 text-primary border-line rounded focus:ring-primary cursor-pointer"
                                                             />
                                                         </th>
                                                         <th className="px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">Data</th>
                                                         <th className="px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">ID</th>
                                                         <th className="px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">Modelo / Cliente</th>
                                                         <th className="px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">Defeito</th>
+                                                        <th className="px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">Técnico</th>
                                                         <th className="px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">Status</th>
-                                                        <th className="px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">Prioridade</th>
-                                                        <th className="px-6 py-3 text-right text-xs font-medium text-secondary uppercase tracking-wider">Ações</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody className="bg-paper divide-y divide-line">

@@ -8,6 +8,11 @@ import imageCompression from 'browser-image-compression';
 import { uploadEvidenceImage } from '../services/supabaseService';
 
 import { ClientAutocomplete } from './ClientAutocomplete';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { Input } from './ui/input';
+import { DatePicker } from './ui/date-picker';
+import { parseDate } from '@internationalized/date';
+import { cn } from '../lib/utils';
 
 interface ReportFormProps {
   data: ReportData;
@@ -31,6 +36,13 @@ export const ReportForm: React.FC<ReportFormProps> = ({
   onPreview
 }) => {
   const [currentStep, setCurrentStep] = useState(1);
+
+  const steps = [
+    { id: 1, title: "Dados do Chamado", desc: "Identificação do cliente e equipamento" },
+    { id: 2, title: "Diagnóstico & Análise", desc: "Descreva o problema e anexe fotos" },
+    { id: 3, title: "Conclusão", desc: "Finalização e exportação" }
+  ];
+
   const [showEvidences, setShowEvidences] = useState((data.photos?.length || 0) > 0);
   const [isUploading, setIsUploading] = useState(false);
   const { isListening, transcript, toggleListening, hasSupport } = useSpeechRecognition();
@@ -103,21 +115,13 @@ export const ReportForm: React.FC<ReportFormProps> = ({
   };
 
   // Classes comuns
-  const inputClass = "w-full px-4 py-2 bg-surface border border-line rounded-lg focus:ring-2 focus:ring-accent focus:border-transparent outline-none transition text-txt placeholder-gray-400";
+  const inputClass = "w-full px-4 py-2 bg-surface border border-line rounded-lg focus:border-transparent outline-none transition text-txt placeholder-gray-400";
   const labelClass = "block text-sm font-medium text-secondary mb-1.5";
 
   // Step 1: Dados do Chamado
   const renderStep1 = () => (
-    <div className="space-y-6 animate-fade-in">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold">1</div>
-        <div>
-          <h2 className="text-xl font-bold text-txt">Dados do Chamado</h2>
-          <p className="text-sm text-secondary">Identificação do cliente e equipamento.</p>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div className="space-y-8 animate-fade-in">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <label className={labelClass}>Solicitante</label>
           <ClientAutocomplete
@@ -138,71 +142,71 @@ export const ReportForm: React.FC<ReportFormProps> = ({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <label className={labelClass}>Tipo de Equipamento</label>
-          <select
-            name="deviceType"
-            value={data.deviceType}
-            onChange={handleChange}
-            className={inputClass}
-          >
-            {Object.values(DeviceType).map((type) => (
-              <option key={type} value={type} className="bg-paper text-txt">{type}</option>
-            ))}
-          </select>
+          <div onClick={(e) => e.stopPropagation()}>
+            <Select value={data.deviceType} onValueChange={(val) => onChange('deviceType', val)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione o tipo" />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.values(DeviceType).map((type) => (
+                  <SelectItem key={type} value={type}>
+                    {type}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
         <div>
           <label className={labelClass}>Data do Atendimento</label>
-          <input
-            type="date"
-            name="date"
-            value={data.date}
-            onChange={handleChange}
-            className={inputClass}
-          />
+          <div onClick={(e) => e.stopPropagation()}>
+            <DatePicker
+              value={data.date ? parseDate(data.date) : null}
+              onChange={(date) => onChange('date', date ? date.toString() : '')}
+              aria-label="Data do Atendimento"
+            />
+          </div>
         </div>
         <div className="md:col-span-2">
           <label className={labelClass}>Modelo / Fabricante</label>
-          <input
+          <Input
             type="text"
             name="model"
             value={data.model}
             onChange={handleChange}
-            className={inputClass}
             placeholder="Ex: Dell Latitude 5420"
           />
         </div>
         <div>
           <label className={labelClass}>Nº Série (S/N)</label>
-          <input
+          <Input
             type="text"
             name="serialNumber"
             value={data.serialNumber}
             onChange={handleChange}
-            className={inputClass}
             placeholder="S/N..."
           />
         </div>
         <div>
           <label className={labelClass}>Patrimônio</label>
-          <input
+          <Input
             type="text"
             name="patrimonyId"
             value={data.patrimonyId}
             onChange={handleChange}
-            className={inputClass}
             placeholder="ID..."
           />
         </div>
         <div className="md:col-span-2">
           <label className={labelClass}>Técnico Responsável</label>
-          <input
+          <Input
             type="text"
             name="technicianName"
             value={data.technicianName}
             onChange={handleChange}
-            className={inputClass}
             placeholder="Seu nome"
           />
         </div>
@@ -213,14 +217,6 @@ export const ReportForm: React.FC<ReportFormProps> = ({
   // Step 2: Diagnóstico & Evidências
   const renderStep2 = () => (
     <div className="space-y-6 animate-fade-in">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold">2</div>
-        <div>
-          <h2 className="text-xl font-bold text-txt">Diagnóstico & Análise</h2>
-          <p className="text-sm text-secondary">Descreva o problema e anexe fotos se necessário.</p>
-        </div>
-      </div>
-
       <div className="bg-primary/5 p-4 rounded-lg border border-line">
         <div className="flex justify-between items-center mb-2">
           <label className="block text-sm font-bold text-primary">Descrição Detalhada</label>
@@ -275,8 +271,7 @@ export const ReportForm: React.FC<ReportFormProps> = ({
         <div className="animate-fade-in-up border border-dashed border-line rounded-lg p-6 text-center bg-surface relative">
           <p className="text-sm text-secondary mb-4">Cole imagens (Ctrl+V) ou arraste aqui</p>
           {/* Simple invisible paste interceptor for the whole div area */}
-          <div
-            className="grid grid-cols-2 md:grid-cols-5 gap-2"
+          <div className="flex flex-wrap gap-4"
             onPaste={async (e) => {
               const items = e.clipboardData.items;
               const files: File[] = [];
@@ -292,21 +287,21 @@ export const ReportForm: React.FC<ReportFormProps> = ({
             }}
           >
             {(data.photos || []).map((photo, index) => (
-              <div key={index} className="relative aspect-square rounded-md overflow-hidden group">
+              <div key={index} className="relative w-24 h-24 rounded-md overflow-hidden group shrink-0 shadow-sm border border-line">
                 <img src={photo} className="w-full h-full object-cover" alt="Evidence" />
                 <button
                   onClick={() => onChange('photos', (data.photos || []).filter((_, i) => i !== index))}
-                  className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity transform scale-75"
                 >
                   ×
                 </button>
               </div>
             ))}
             {(data.photos || []).length < 5 && (
-              <div className="aspect-square rounded-md border-2 border-dashed border-gray-300 flex items-center justify-center text-gray-400 hover:text-primary hover:border-primary transition cursor-pointer"
+              <div className="w-24 h-24 rounded-md border-2 border-dashed border-line flex items-center justify-center text-secondary hover:text-primary hover:border-primary transition cursor-pointer bg-surface hover:bg-paper shrink-0"
                 onClick={() => fileInputRef.current?.click()}
               >
-                <span className="text-2xl">+</span>
+                <span className="text-2xl font-light">+</span>
               </div>
             )}
             <input
@@ -395,26 +390,30 @@ export const ReportForm: React.FC<ReportFormProps> = ({
   return (
     <div className="bg-paper p-6 rounded-lg shadow-sm border border-line h-full flex flex-col">
       {/* Wizard Progress */}
-      <div className="flex items-center justify-between mb-8 px-2 md:px-8">
-        {[1, 2, 3].map(step => (
-          <div key={step} className={`flex items-center ${step < 3 ? 'flex-1' : ''}`}>
-            <div
-              className={`
-                     w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300 border-2
-                     ${currentStep >= step ? 'bg-primary text-white border-primary scale-110' : 'bg-surface text-secondary border-line'}
-                   `}
-            >
-              {step}
-            </div>
-            {step < 3 && (
-              <div className={`h-1 flex-1 mx-2 rounded-full transition-all duration-300 ${currentStep > step ? 'bg-primary' : 'bg-line'}`}></div>
-            )}
+      {/* Modern Progress Bar */}
+      <div className="mb-8 px-2 md:px-4">
+        <div className="flex justify-between items-end mb-3">
+          <div className="animate-fade-in">
+            <span className="text-xs font-bold text-primary uppercase tracking-wider mb-1 block">Passo {currentStep} de 3</span>
+            <h2 className="text-xl font-bold text-txt leading-none">{steps[currentStep - 1].title}</h2>
           </div>
-        ))}
+          <span className="text-xs text-secondary hidden sm:block animate-fade-in text-right max-w-[200px] leading-tight">
+            {steps[currentStep - 1].desc}
+          </span>
+        </div>
+
+        <div className="h-2 bg-surface border border-line rounded-full overflow-hidden relative">
+          <div
+            className="h-full bg-primary shadow-[0_0_10px_rgba(235,35,133,0.5)] transition-all duration-700 ease-out relative overflow-hidden"
+            style={{ width: `${(currentStep / 3) * 100}%` }}
+          >
+            <div className="absolute inset-0 bg-white/20 animate-shimmer"></div>
+          </div>
+        </div>
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto min-h-[400px]">
+      <div className="flex-1 overflow-y-auto min-h-[400px] pr-2 custom-scrollbar">
         {currentStep === 1 && renderStep1()}
         {currentStep === 2 && renderStep2()}
         {currentStep === 3 && renderStep3()}

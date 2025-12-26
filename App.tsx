@@ -75,6 +75,16 @@ const AppContent: React.FC = () => {
     // Logic for checking draft can go here
   }, [checkDraft]);
 
+  // PDF Generator Hook (Moved to top level)
+  const { generatePDF, isDownloading: isHookDownloading } = usePDFGenerator({
+    onError: (err) => alert("Erro ao gerar PDF: " + err)
+  });
+
+  // Sync loading state
+  useEffect(() => {
+    setIsDownloading(isHookDownloading);
+  }, [isHookDownloading]);
+
   // Shortcuts
   useKeyboardShortcuts([
     {
@@ -304,15 +314,7 @@ const AppContent: React.FC = () => {
     }
   };
 
-  // PDF Generator Hook
-  const { generatePDF, isDownloading: isHookDownloading } = usePDFGenerator({
-    onError: (err) => alert("Erro ao gerar PDF: " + err)
-  });
 
-  // Sync loading state
-  useEffect(() => {
-    setIsDownloading(isHookDownloading);
-  }, [isHookDownloading]);
 
 
   const handleDownloadPDF = async () => {
@@ -495,24 +497,7 @@ Proxxima Telecom
 
 
       {/* Mobile Tabs */}
-      {viewMode === 'editor' && (
-        <div className="md:hidden flex border-b border-white/5 bg-paper shrink-0">
-          <button
-            onClick={() => setActiveMobileTab('edit')}
-            className={`flex-1 py-3 text-sm font-medium transition-colors relative ${activeMobileTab === 'edit' ? 'text-primary' : 'text-secondary'}`}
-          >
-            Editar
-            {activeMobileTab === 'edit' && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-primary animate-fade-in" />}
-          </button>
-          <button
-            onClick={() => setActiveMobileTab('preview')}
-            className={`flex-1 py-3 text-sm font-medium transition-colors relative ${activeMobileTab === 'preview' ? 'text-primary' : 'text-secondary'}`}
-          >
-            Visualizar
-            {activeMobileTab === 'preview' && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-primary animate-fade-in" />}
-          </button>
-        </div>
-      )}
+
 
       {/* Main Content Areas */}
       {viewMode === 'dashboard' ? (

@@ -16,16 +16,30 @@ const COLUMN_CONFIG = [
 
 export const KanbanBoard: React.FC<KanbanBoardProps> = ({ reports, onUpdateStatus, onViewReport }) => {
 
+    const [activeDragColumn, setActiveDragColumn] = React.useState<string | null>(null);
+
     const handleDragStart = (e: React.DragEvent, reportId: string) => {
         e.dataTransfer.setData('reportId', reportId);
+        e.dataTransfer.effectAllowed = 'move';
+        // Add a small delay/timeout to add a class if we want to change the drag source appearance
+        // e.currentTarget.classList.add('opacity-50'); (This is handled by browser mostly, but we can do custom)
     };
 
-    const handleDragOver = (e: React.DragEvent) => {
-        e.preventDefault(); // Essential for allow drop
+    const handleDragOver = (e: React.DragEvent, colId: string) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        if (activeDragColumn !== colId) {
+            setActiveDragColumn(colId);
+        }
     };
+
+    const handleDragLeave = (e: React.DragEvent) => {
+        setActiveDragColumn(null);
+    }
 
     const handleDrop = (e: React.DragEvent, status: 'open' | 'in_progress' | 'closed') => {
         e.preventDefault();
+        setActiveDragColumn(null);
         const reportId = e.dataTransfer.getData('reportId');
         if (reportId) {
             onUpdateStatus(reportId, status);
@@ -38,16 +52,22 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ reports, onUpdateStatu
                 {COLUMN_CONFIG.map(col => {
                     const colReports = reports.filter(r => r.status === col.id);
                     const Icon = col.icon;
+                    const isDragOver = activeDragColumn === col.id;
 
                     return (
                         <div
                             key={col.id}
-                            className={`flex-1 flex flex-col rounded-xl bg-paper border border-line h-full max-h-full`}
-                            onDragOver={handleDragOver}
+                            className={`flex-1 flex flex-col rounded-xl border transition-all duration-200 h-full max-h-full
+                                ${isDragOver ? 'bg-primary/5 border-primary shadow-lg scale-[1.01]' : 'bg-paper border-line'}
+                            `}
+                            onDragOver={(e) => handleDragOver(e, col.id)}
+                            onDragLeave={handleDragLeave}
                             onDrop={(e) => handleDrop(e, col.id)}
                         >
                             {/* Header */}
-                            <div className={`p-4 border-b border-line flex items-center justify-between sticky top-0 bg-paper rounded-t-xl z-10`}>
+                            <div className={`p-4 border-b border-line flex items-center justify-between sticky top-0 rounded-t-xl z-10 transition-colors
+                                ${isDragOver ? 'bg-primary/10' : 'bg-paper'}
+                            `}>
                                 <div className="flex items-center gap-2">
                                     <div className={`p-1.5 rounded-lg ${col.bg}`}>
                                         <Icon className={`w-4 h-4 ${col.id === 'open' ? 'text-blue-600' : col.id === 'in_progress' ? 'text-yellow-600' : 'text-green-600'}`} />
@@ -67,7 +87,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ reports, onUpdateStatu
                                         draggable
                                         onDragStart={(e) => handleDragStart(e, report.id)}
                                         onClick={() => onViewReport(report)}
-                                        className="bg-surface p-4 rounded-lg border border-line hover:shadow-md hover:border-primary/50 cursor-pointer transition-all group active:cursor-grabbing"
+                                        className="bg-surface p-4 rounded-lg border border-line hover:shadow-md hover:border-primary/50 cursor-pointer transition-all group active:cursor-grabbing active:scale-95 active:shadow-xl"
                                     >
                                         <div className="flex justify-between items-start mb-2">
                                             <span className="text-xs font-mono text-secondary px-1.5 py-0.5 bg-paper rounded border border-line">
