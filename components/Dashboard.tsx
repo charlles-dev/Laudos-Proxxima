@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { SavedReport, getReports, getAllReports, getReportById, getUserProfile, deleteReports, updateReport } from '../services/supabaseService';
-import { Plus, Search, FileText, BarChart2, List, Copy, Download, Loader2, Eye, LayoutGrid, Table as TableIcon, Trash2, CheckSquare, XSquare } from 'lucide-react';
+import { Plus, Search, FileText, BarChart2, List, Copy, Download, Loader2, Eye, LayoutGrid, Table as TableIcon, Trash2, CheckSquare, XSquare, Share2 } from 'lucide-react';
 import { AnalyticsDashboard } from './AnalyticsDashboard';
 import { ActivityLog } from './ActivityLog';
 import { KanbanBoard } from './KanbanBoard';
+import { usePDFGenerator } from '../hooks/usePDFGenerator';
+import { ReportPreview } from './ReportPreview';
 
 
 interface DashboardProps {
@@ -34,6 +36,27 @@ export const Dashboard: React.FC<DashboardProps> = ({ onCreateNew, onViewReport,
     // Bulk Actions State
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
     const [isBulkActionLoading, setIsBulkActionLoading] = useState(false);
+
+    // PDF Generation State
+    const [reportToPrint, setReportToPrint] = useState<SavedReport | null>(null);
+    const { generatePDF, isDownloading } = usePDFGenerator({
+        onSuccess: () => setReportToPrint(null),
+        onError: (err) => {
+            alert("Erro ao gerar PDF: " + err);
+            setReportToPrint(null);
+        }
+    });
+
+    // Trigger PDF generation when reportToPrint is set and rendered
+    useEffect(() => {
+        if (reportToPrint && !isDownloading) {
+            // Small delay to ensure render
+            const timer = setTimeout(() => {
+                generatePDF(reportToPrint, 'dashboard-report-preview-hidden');
+            }, 100);
+            return () => clearTimeout(timer);
+        }
+    }, [reportToPrint]);
 
     useEffect(() => {
         if (currentUser) {
@@ -137,6 +160,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ onCreateNew, onViewReport,
     };
 
 
+
+    // --- Actions ---
+    const handleDownload = (report: SavedReport) => {
+        setReportToPrint(report);
+    };
 
     // --- Bulk Action Handlers ---
     const toggleSelection = (id: string) => {
@@ -244,14 +272,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ onCreateNew, onViewReport,
                 ) : (
                     <span className="text-secondary">-</span>
                 )}
-            </td>
-            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium flex justify-end gap-2 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
-                <button onClick={() => onViewReport(report)} className="p-1.5 hover:bg-primary/10 rounded text-primary" title="Visualizar">
-                    <Eye className="w-4 h-4" />
-                </button>
-                <button onClick={() => onCloneReport(report)} className="p-1.5 hover:bg-accent/10 rounded text-accent" title="Clonar">
-                    <Copy className="w-4 h-4" />
-                </button>
             </td>
         </tr>
     );
@@ -427,6 +447,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onCreateNew, onViewReport,
 
                 {/* Floating Bulk Action Bar */}
                 {/* Floating Bulk Action Bar */}
+                {/* Floating Bulk Action Bar */}
                 {selectedIds.size > 0 && (
                     <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-paper/95 backdrop-blur-sm text-text px-6 py-3 rounded-full shadow-2xl z-50 flex items-center gap-6 animate-fade-in-up border border-line">
                         <span className="font-semibold text-sm">{selectedIds.size} selecionado(s)</span>
@@ -434,13 +455,70 @@ export const Dashboard: React.FC<DashboardProps> = ({ onCreateNew, onViewReport,
                         <div className="h-4 w-px bg-line"></div>
 
                         <div className="flex items-center gap-2">
+                            {selectedIds.size === 1 && (
+                                <>
+                                    <button
+                                        onClick={() => {
+                                            const id = Array.from(selectedIds)[0];
+                                            const report = allReports.find(r => r.id === id) || reports.find(r => r.id === id);
+                                            if (report) onViewReport(report);
+                                        }}
+                                        className="flex items-center gap-2 px-3 py-1.5 hover:bg-secondary/10 rounded-md transition text-sm font-medium text-text"
+                                        title="Visualizar"
+                                    >
+                                        <Eye className="w-4 h-4" />
+                                        <span className="hidden sm:inline">Ver</span>
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            const id = Array.from(selectedIds)[0];
+                                            const report = allReports.find(r => r.id === id) || reports.find(r => r.id === id);
+                                            if (report) handleDownload(report);
+                                        }}
+                                        disabled={isDownloading || !!reportToPrint}
+                                        className="flex items-center gap-2 px-3 py-1.5 hover:bg-secondary/10 rounded-md transition text-sm font-medium text-text"
+                                        title="Baixar PDF"
+                                    >
+                                        {(isDownloading || !!reportToPrint) ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+                                        <span className="hidden sm:inline">Baixar</span>
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            const id = Array.from(selectedIds)[0];
+                                            const report = allReports.find(r => r.id === id) || reports.find(r => r.id === id);
+                                            if (report) onCloneReport(report);
+                                        }}
+                                        className="flex items-center gap-2 px-3 py-1.5 hover:bg-secondary/10 rounded-md transition text-sm font-medium text-text"
+                                        title="Clonar"
+                                    >
+                                        <Copy className="w-4 h-4" />
+                                        <span className="hidden sm:inline">Clonar</span>
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            const id = Array.from(selectedIds)[0];
+                                            // Share logic: Copy link to clipboard
+                                            const link = `${window.location.origin}/?ref=${id}`; // Use ID as simple ref fallback if refId missing
+                                            navigator.clipboard.writeText(link);
+                                            alert("Link copiado para a área de transferência!");
+                                        }}
+                                        className="flex items-center gap-2 px-3 py-1.5 hover:bg-secondary/10 rounded-md transition text-sm font-medium text-text"
+                                        title="Compartilhar Link"
+                                    >
+                                        <Share2 className="w-4 h-4" />
+                                        <span className="hidden sm:inline">Compartilhar</span>
+                                    </button>
+                                    <div className="h-4 w-px bg-line mx-2"></div>
+                                </>
+                            )}
+
                             <button
                                 onClick={() => handleBulkStatusChange('closed')}
                                 disabled={isBulkActionLoading}
                                 className="flex items-center gap-2 px-3 py-1.5 hover:bg-secondary/10 rounded-md transition text-sm font-medium text-text"
                             >
                                 <CheckSquare className="w-4 h-4" />
-                                Concluir
+                                <span className="hidden sm:inline">Concluir</span>
                             </button>
                             <button
                                 onClick={handleBulkDelete}
@@ -448,7 +526,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onCreateNew, onViewReport,
                                 className="flex items-center gap-2 px-3 py-1.5 hover:bg-red-500/10 text-red-500 hover:text-red-600 rounded-md transition text-sm font-medium"
                             >
                                 {isBulkActionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
-                                Excluir
+                                <span className="hidden sm:inline">Excluir</span>
                             </button>
                         </div>
 
@@ -530,6 +608,16 @@ export const Dashboard: React.FC<DashboardProps> = ({ onCreateNew, onViewReport,
                     )}
                 </div>
             </div>
+            {/* Hidden Report Preview for PDF Generation */}
+            {reportToPrint && (
+                <div style={{ position: 'fixed', left: '-9999px', top: 0 }}>
+                    <ReportPreview
+                        data={reportToPrint}
+                        isGenerating={false}
+                        elementId="dashboard-report-preview-hidden"
+                    />
+                </div>
+            )}
         </div>
     );
 };
