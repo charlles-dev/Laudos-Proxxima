@@ -233,6 +233,20 @@ export const Dashboard: React.FC<DashboardProps> = ({ onCreateNew, onViewReport,
 
     const activeFilterCount = (statusFilter !== 'all' ? 1 : 0) + (priorityFilter !== 'all' ? 1 : 0) + (dateFilter !== 'all' ? 1 : 0);
 
+    // Helper for status badge styles
+    const getStatusStyles = (status: string) => {
+        switch (status) {
+            case 'open':
+                return 'bg-blue-500/10 text-blue-500 border-blue-500/20 hover:bg-blue-500/20';
+            case 'in_progress':
+                return 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20 hover:bg-yellow-500/20';
+            case 'closed':
+                return 'bg-green-500/10 text-green-500 border-green-500/20 hover:bg-green-500/20';
+            default:
+                return 'bg-secondary/10 text-secondary border-line';
+        }
+    };
+
     // Render Table Row
     const renderRow = (report: SavedReport) => (
         <tr key={report.id} className={`hover:bg-surface/50 transition-colors border-b border-line last:border-0 group ${selectedIds.has(report.id) ? 'bg-primary/5' : ''}`}>
@@ -265,18 +279,18 @@ export const Dashboard: React.FC<DashboardProps> = ({ onCreateNew, onViewReport,
             <td className="px-6 py-4 whitespace-nowrap text-xs">
                 <div onClick={(e) => e.stopPropagation()}>
                     <Select value={report.status || 'open'} onValueChange={(val) => handleUpdateStatus(report.id, val as any)}>
-                        <SelectTrigger className="w-36 h-8 text-xs">
+                        <SelectTrigger className={`w-18 h-8 text-xs font-semibold border transition-all ${getStatusStyles(report.status || 'open')}`}>
                             <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="open">
-                                <span className="text-blue-500">Aberto</span>
+                                <span className="text-blue-500 font-medium">Aberto</span>
                             </SelectItem>
                             <SelectItem value="in_progress">
-                                <span className="text-yellow-500">Em Análise</span>
+                                <span className="text-yellow-500 font-medium">Em Análise</span>
                             </SelectItem>
                             <SelectItem value="closed">
-                                <span className="text-green-500">Fechado</span>
+                                <span className="text-green-500 font-medium">Fechado</span>
                             </SelectItem>
                         </SelectContent>
                     </Select>
@@ -290,7 +304,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onCreateNew, onViewReport,
 
     return (
         <div className="flex-1 flex flex-col items-center p-6 bg-surface overflow-hidden h-full">
-            <div className="w-full max-w-6xl h-full flex flex-col">
+            <div className="w-full max-w-[1200px] h-full flex flex-col">
 
                 {/* Top Controls */}
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 shrink-0">
@@ -600,7 +614,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onCreateNew, onViewReport,
                                                         <th className="px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">Modelo / Cliente</th>
                                                         <th className="px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">Defeito</th>
                                                         <th className="px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">Técnico</th>
-                                                        <th className="min-w-[180px] px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">Status</th>
+                                                        <th className="min-w-[130px] px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">Status</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody className="bg-paper divide-y divide-line">
