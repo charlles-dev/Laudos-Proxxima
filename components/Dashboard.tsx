@@ -485,10 +485,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ onCreateNew, onViewReport,
 
 
                 {/* Floating Bulk Action Bar */}
-                {/* Floating Bulk Action Bar */}
-                {/* Floating Bulk Action Bar */}
                 {selectedIds.size > 0 && (
-                    <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-paper/95 backdrop-blur-sm text-text px-4 py-2 rounded-full shadow-2xl z-50 flex items-center gap-4 animate-fade-in-up border border-line">
+                    <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 bg-paper/95 backdrop-blur-sm text-text px-4 py-2 rounded-full shadow-2xl z-50 flex items-center gap-4 animate-fade-in-up border border-line whitespace-nowrap">
                         <span className="font-semibold text-sm">{selectedIds.size} selecionado(s)</span>
 
                         <div className="h-4 w-px bg-line"></div>
@@ -576,7 +574,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onCreateNew, onViewReport,
                 )}
 
                 {/* Content Area */}
-                <div className="flex-1 overflow-auto pr-2">
+                <div className="flex-1 overflow-auto pr-2 relative">
                     {loading ? (
                         <div className="flex items-center justify-center h-40">
                             <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -602,7 +600,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onCreateNew, onViewReport,
                                                         <th className="px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">Modelo / Cliente</th>
                                                         <th className="px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">Defeito</th>
                                                         <th className="px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">Técnico</th>
-                                                        <th className="px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">Status</th>
+                                                        <th className="min-w-[180px] px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">Status</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody className="bg-paper divide-y divide-line">
