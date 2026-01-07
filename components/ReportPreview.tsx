@@ -217,11 +217,11 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ data, isGenerating
                     <div className={`col-span-2 grid gap-4 ${validPhotos.length <= 3 ? 'grid-cols-1' : 'grid-cols-2'}`}>
                       {validPhotos.map((url, idx) => (
                         <div key={idx} className="flex flex-col gap-1 break-inside-avoid">
-                          <div className={`border border-gray-200 p-1 rounded bg-white relative overflow-hidden group ${validPhotos.length <= 3 ? 'h-64' : 'h-48'}`}>
+                          <div className={`border border-gray-200 p-1 rounded bg-white relative overflow-hidden group flex items-center justify-center ${validPhotos.length <= 3 ? 'h-64' : 'h-48'}`}>
                             <img
                               src={url}
                               alt={`Evidência ${idx + 1}`}
-                              className="w-full h-full object-cover rounded transition-transform duration-500 group-hover:scale-110"
+                              className="max-w-full max-h-full object-contain rounded"
                               onError={(e) => {
                                 (e.target as HTMLImageElement).style.display = 'none';
                                 (e.target as HTMLImageElement).parentElement!.innerText = 'Imagem indisponível';

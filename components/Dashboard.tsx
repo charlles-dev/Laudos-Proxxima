@@ -8,6 +8,7 @@ import { ActivityLog } from './ActivityLog';
 import { KanbanBoard } from './KanbanBoard';
 import { usePDFGenerator } from '../hooks/usePDFGenerator';
 import { ReportPreview } from './ReportPreview';
+import { PreviewModal } from './PreviewModal';
 
 
 interface DashboardProps {
@@ -40,6 +41,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onCreateNew, onViewReport,
 
     // PDF Generation State
     const [reportToPrint, setReportToPrint] = useState<SavedReport | null>(null);
+    const [previewReport, setPreviewReport] = useState<SavedReport | null>(null);
     const { generatePDF, isDownloading } = usePDFGenerator({
         onSuccess: () => setReportToPrint(null),
         onError: (err) => {
@@ -512,7 +514,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onCreateNew, onViewReport,
                                         onClick={() => {
                                             const id = Array.from(selectedIds)[0];
                                             const report = allReports.find(r => r.id === id) || reports.find(r => r.id === id);
-                                            if (report) onViewReport(report);
+                                            if (report) setPreviewReport(report);
                                         }}
                                         className="flex items-center gap-2 px-3 py-1.5 hover:bg-secondary/10 rounded-md transition text-sm font-medium text-text"
                                         title="Visualizar"
@@ -563,14 +565,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onCreateNew, onViewReport,
                                 </>
                             )}
 
-                            <button
-                                onClick={() => handleBulkStatusChange('closed')}
-                                disabled={isBulkActionLoading}
-                                className="flex items-center gap-2 px-3 py-1.5 hover:bg-secondary/10 rounded-md transition text-sm font-medium text-text"
-                            >
-                                <CheckSquare className="w-4 h-4" />
-                                <span className="hidden sm:inline">Concluir</span>
-                            </button>
+
                             <button
                                 onClick={handleBulkDelete}
                                 disabled={isBulkActionLoading}
@@ -666,6 +661,15 @@ export const Dashboard: React.FC<DashboardProps> = ({ onCreateNew, onViewReport,
                         elementId="dashboard-report-preview-hidden"
                     />
                 </div>
+            )}
+
+            {/* Preview Modal from Bulk Actions */}
+            {previewReport && (
+                <PreviewModal
+                    isOpen={!!previewReport}
+                    onClose={() => setPreviewReport(null)}
+                    data={previewReport}
+                />
             )}
         </div>
     );

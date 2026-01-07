@@ -151,11 +151,10 @@ const AppContent: React.FC = () => {
           setUserProfile(profile);
           if (!profile.hasCompletedOnboarding) {
             // First time login flow
-            // 1. Show Welcome (First Login version)
-            // 2. Then Change Password
-            // 3. Then Onboarding
-            setShowWelcome(true);
-            // Note: Onboarding and Change Password triggers are handled after welcome completes or in sequence
+            // Check if we are already in the flow to avoid resetting due to Auth updates
+            if (!showChangePassword && !showOnboarding && !showWelcome) {
+              setShowWelcome(true);
+            }
           } else {
             const isJustLoggedIn = sessionStorage.getItem('just_logged_in');
             if (isJustLoggedIn) {
@@ -171,11 +170,13 @@ const AppContent: React.FC = () => {
             hasCompletedOnboarding: false
           });
           // Also trigger welcome if profile is missing (brand new user)
-          setShowWelcome(true);
+          if (!showChangePassword && !showOnboarding && !showWelcome) {
+            setShowWelcome(true);
+          }
         }
       });
     }
-  }, [currentUser]);
+  }, [currentUser, showChangePassword, showOnboarding, showWelcome]);
 
   // 3. Auto-fill technician Name
   useEffect(() => {
