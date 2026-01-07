@@ -306,7 +306,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onCreateNew, onViewReport,
 
     return (
         <div className="flex-1 flex flex-col items-center p-6 bg-surface overflow-hidden h-full">
-            <div className="w-full max-w-[1200px] h-full flex flex-col">
+            <div className="relative w-full max-w-[1200px] h-full flex flex-col">
 
                 {/* Top Controls */}
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 shrink-0">
@@ -502,83 +502,85 @@ export const Dashboard: React.FC<DashboardProps> = ({ onCreateNew, onViewReport,
 
                 {/* Floating Bulk Action Bar */}
                 {selectedIds.size > 0 && (
-                    <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 bg-paper/95 backdrop-blur-sm text-text px-4 py-2 rounded-full shadow-2xl z-50 flex items-center gap-4 animate-fade-in-up border border-line whitespace-nowrap">
-                        <span className="font-semibold text-sm">{selectedIds.size} selecionado(s)</span>
+                    <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 z-50">
+                        <div className="bg-paper/95 backdrop-blur-sm text-text px-4 py-2 rounded-full shadow-2xl flex items-center gap-4 animate-fade-in-up border border-line whitespace-nowrap">
+                            <span className="font-semibold text-sm">{selectedIds.size} selecionado(s)</span>
 
-                        <div className="h-4 w-px bg-line"></div>
+                            <div className="h-4 w-px bg-line"></div>
 
-                        <div className="flex items-center gap-2">
-                            {selectedIds.size === 1 && (
-                                <>
-                                    <button
-                                        onClick={() => {
-                                            const id = Array.from(selectedIds)[0];
-                                            const report = allReports.find(r => r.id === id) || reports.find(r => r.id === id);
-                                            if (report) setPreviewReport(report);
-                                        }}
-                                        className="flex items-center gap-2 px-3 py-1.5 hover:bg-secondary/10 rounded-md transition text-sm font-medium text-text"
-                                        title="Visualizar"
-                                    >
-                                        <Eye className="w-4 h-4" />
-                                        <span className="hidden sm:inline">Ver</span>
-                                    </button>
-                                    <button
-                                        onClick={() => {
-                                            const id = Array.from(selectedIds)[0];
-                                            const report = allReports.find(r => r.id === id) || reports.find(r => r.id === id);
-                                            if (report) handleDownload(report);
-                                        }}
-                                        disabled={isDownloading || !!reportToPrint}
-                                        className="flex items-center gap-2 px-3 py-1.5 hover:bg-secondary/10 rounded-md transition text-sm font-medium text-text"
-                                        title="Baixar PDF"
-                                    >
-                                        {(isDownloading || !!reportToPrint) ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-                                        <span className="hidden sm:inline">Baixar</span>
-                                    </button>
-                                    <button
-                                        onClick={() => {
-                                            const id = Array.from(selectedIds)[0];
-                                            const report = allReports.find(r => r.id === id) || reports.find(r => r.id === id);
-                                            if (report) onCloneReport(report);
-                                        }}
-                                        className="flex items-center gap-2 px-3 py-1.5 hover:bg-secondary/10 rounded-md transition text-sm font-medium text-text"
-                                        title="Clonar"
-                                    >
-                                        <Copy className="w-4 h-4" />
-                                        <span className="hidden sm:inline">Clonar</span>
-                                    </button>
-                                    <button
-                                        onClick={() => {
-                                            const id = Array.from(selectedIds)[0];
-                                            // Share logic: Copy link to clipboard
-                                            const link = `${window.location.origin}/?ref=${id}`; // Use ID as simple ref fallback if refId missing
-                                            navigator.clipboard.writeText(link);
-                                            alert("Link copiado para a área de transferência!");
-                                        }}
-                                        className="flex items-center gap-2 px-3 py-1.5 hover:bg-secondary/10 rounded-md transition text-sm font-medium text-text"
-                                        title="Compartilhar Link"
-                                    >
-                                        <Share2 className="w-4 h-4" />
-                                        <span className="hidden sm:inline">Compartilhar</span>
-                                    </button>
-                                    <div className="h-4 w-px bg-line mx-2"></div>
-                                </>
-                            )}
+                            <div className="flex items-center gap-2">
+                                {selectedIds.size === 1 && (
+                                    <>
+                                        <button
+                                            onClick={() => {
+                                                const id = Array.from(selectedIds)[0];
+                                                const report = allReports.find(r => r.id === id) || reports.find(r => r.id === id);
+                                                if (report) setPreviewReport(report);
+                                            }}
+                                            className="flex items-center gap-2 px-3 py-1.5 hover:bg-secondary/10 rounded-md transition text-sm font-medium text-text"
+                                            title="Visualizar"
+                                        >
+                                            <Eye className="w-4 h-4" />
+                                            <span className="hidden sm:inline">Ver</span>
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                const id = Array.from(selectedIds)[0];
+                                                const report = allReports.find(r => r.id === id) || reports.find(r => r.id === id);
+                                                if (report) handleDownload(report);
+                                            }}
+                                            disabled={isDownloading || !!reportToPrint}
+                                            className="flex items-center gap-2 px-3 py-1.5 hover:bg-secondary/10 rounded-md transition text-sm font-medium text-text"
+                                            title="Baixar PDF"
+                                        >
+                                            {(isDownloading || !!reportToPrint) ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+                                            <span className="hidden sm:inline">Baixar</span>
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                const id = Array.from(selectedIds)[0];
+                                                const report = allReports.find(r => r.id === id) || reports.find(r => r.id === id);
+                                                if (report) onCloneReport(report);
+                                            }}
+                                            className="flex items-center gap-2 px-3 py-1.5 hover:bg-secondary/10 rounded-md transition text-sm font-medium text-text"
+                                            title="Clonar"
+                                        >
+                                            <Copy className="w-4 h-4" />
+                                            <span className="hidden sm:inline">Clonar</span>
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                const id = Array.from(selectedIds)[0];
+                                                // Share logic: Copy link to clipboard
+                                                const link = `${window.location.origin}/?ref=${id}`; // Use ID as simple ref fallback if refId missing
+                                                navigator.clipboard.writeText(link);
+                                                alert("Link copiado para a área de transferência!");
+                                            }}
+                                            className="flex items-center gap-2 px-3 py-1.5 hover:bg-secondary/10 rounded-md transition text-sm font-medium text-text"
+                                            title="Compartilhar Link"
+                                        >
+                                            <Share2 className="w-4 h-4" />
+                                            <span className="hidden sm:inline">Compartilhar</span>
+                                        </button>
+                                        <div className="h-4 w-px bg-line mx-2"></div>
+                                    </>
+                                )}
 
 
-                            <button
-                                onClick={handleBulkDelete}
-                                disabled={isBulkActionLoading}
-                                className="flex items-center gap-2 px-3 py-1.5 hover:bg-red-500/10 text-red-500 hover:text-red-600 rounded-md transition text-sm font-medium"
-                            >
-                                {isBulkActionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
-                                <span className="hidden sm:inline">Excluir</span>
+                                <button
+                                    onClick={handleBulkDelete}
+                                    disabled={isBulkActionLoading}
+                                    className="flex items-center gap-2 px-3 py-1.5 hover:bg-red-500/10 text-red-500 hover:text-red-600 rounded-md transition text-sm font-medium"
+                                >
+                                    {isBulkActionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                                    <span className="hidden sm:inline">Excluir</span>
+                                </button>
+                            </div>
+
+                            <button onClick={() => setSelectedIds(new Set())} className="ml-2 p-1 hover:bg-secondary/10 rounded-full text-secondary hover:text-text transition-colors">
+                                <XSquare className="w-5 h-5" />
                             </button>
                         </div>
-
-                        <button onClick={() => setSelectedIds(new Set())} className="ml-2 p-1 hover:bg-secondary/10 rounded-full text-secondary hover:text-text transition-colors">
-                            <XSquare className="w-5 h-5" />
-                        </button>
                     </div>
                 )}
 
