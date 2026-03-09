@@ -56,7 +56,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, cur
                         className="relative w-full max-w-md bg-paper rounded-2xl shadow-2xl border border-line overflow-hidden"
                     >
                         {/* Header */}
-                        <div className="flex items-center justify-between p-6 border-b border-line bg-surface/50">
+                        <div className="flex items-center justify-between p-6 border-b border-line bg-white/50 dark:bg-slate-900/50">
                             <h2 className="text-xl font-bold text-text flex items-center gap-2">
                                 <User className="w-5 h-5 text-primary" />
                                 Meu Perfil
@@ -80,7 +80,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, cur
                                         type="text"
                                         value={currentUser.email}
                                         disabled
-                                        className="w-full pl-10 pr-4 py-3 bg-surface/50 border border-line rounded-xl text-secondary cursor-not-allowed outline-none"
+                                        className="w-full pl-10 pr-4 py-3 bg-black/5 dark:bg-black/20 border border-black/10 dark:border-white/10 rounded-xl text-secondary cursor-not-allowed outline-none"
                                     />
                                 </div>
                             </div>

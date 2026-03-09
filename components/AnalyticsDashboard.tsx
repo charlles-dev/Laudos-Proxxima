@@ -94,44 +94,44 @@ export const AnalyticsDashboard: React.FC<AnalyticsProps> = ({ reports }) => {
         <div className="space-y-6 animate-fade-in-up">
             {/* KPI Cards */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="bg-paper border border-line p-4 rounded-xl shadow-sm flex items-center justify-between">
+                <div className="glass-strong border border-white/10 p-5 rounded-2xl shadow-lg flex items-center justify-between hover:shadow-[0_0_30px_rgba(205,39,132,0.15)] transition-shadow">
                     <div>
-                        <p className="text-secondary text-xs uppercase font-bold tracking-wider">Total de Laudos</p>
-                        <h3 className="text-3xl font-bold text-primary mt-1">{reports.length}</h3>
+                        <p className="text-secondary text-xs uppercase font-bold tracking-wider mb-1">Total de Laudos</p>
+                        <h3 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-primary to-purple-400">{reports.length}</h3>
                     </div>
-                    <div className="p-3 bg-primary/10 rounded-full">
+                    <div className="p-3 bg-primary/10 rounded-2xl border border-primary/20">
                         <BarChart3 className="w-6 h-6 text-primary" />
                     </div>
                 </div>
-                <div className="bg-paper border border-line p-4 rounded-xl shadow-sm flex items-center justify-between">
+                <div className="glass-strong border border-white/10 p-5 rounded-2xl shadow-lg flex items-center justify-between hover:shadow-[0_0_30px_rgba(139,92,246,0.15)] transition-shadow">
                     <div>
-                        <p className="text-secondary text-xs uppercase font-bold tracking-wider">Modelos Únicos</p>
-                        <h3 className="text-3xl font-bold text-accent mt-1">{modelsData.length}</h3>
+                        <p className="text-secondary text-xs uppercase font-bold tracking-wider mb-1">Modelos Únicos</p>
+                        <h3 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-accent to-blue-400">{modelsData.length}</h3>
                     </div>
-                    <div className="p-3 bg-accent/10 rounded-full">
+                    <div className="p-3 bg-accent/10 rounded-2xl border border-accent/20">
                         <PieIcon className="w-6 h-6 text-accent" />
                     </div>
                 </div>
-                <div className="bg-paper border border-line p-4 rounded-xl shadow-sm flex items-center justify-between">
+                <div className="glass-strong border border-white/10 p-5 rounded-2xl shadow-lg flex items-center justify-between hover:shadow-[0_0_30px_rgba(34,197,94,0.15)] transition-shadow">
                     <div>
-                        <p className="text-secondary text-xs uppercase font-bold tracking-wider">Laudos (Mês Atual)</p>
-                        <h3 className="text-3xl font-bold text-green-500 mt-1">
+                        <p className="text-secondary text-xs uppercase font-bold tracking-wider mb-1">Laudos (Mês Atual)</p>
+                        <h3 className="text-3xl font-black text-green-400">
                             {currentMonthCount}
                         </h3>
                     </div>
-                    <div className="p-3 bg-green-500/10 rounded-full">
-                        <TrendingUp className="w-6 h-6 text-green-500" />
+                    <div className="p-3 bg-green-500/10 rounded-2xl border border-green-500/20">
+                        <TrendingUp className="w-6 h-6 text-green-400" />
                     </div>
                 </div>
-                <div className="bg-paper border border-line p-4 rounded-xl shadow-sm flex items-center justify-between">
+                <div className="glass-strong border border-white/10 p-5 rounded-2xl shadow-lg flex items-center justify-between hover:shadow-[0_0_30px_rgba(59,130,246,0.15)] transition-shadow">
                     <div>
-                        <p className="text-secondary text-xs uppercase font-bold tracking-wider">Taxa de Conclusão</p>
-                        <h3 className="text-3xl font-bold text-blue-500 mt-1">
+                        <p className="text-secondary text-xs uppercase font-bold tracking-wider mb-1">Taxa de Conclusão</p>
+                        <h3 className="text-3xl font-black text-blue-400">
                             {efficiencyStats.closureRate.toFixed(0)}%
                         </h3>
                     </div>
-                    <div className="p-3 bg-blue-500/10 rounded-full">
-                        <BarChart3 className="w-6 h-6 text-blue-500" />
+                    <div className="p-3 bg-blue-500/10 rounded-2xl border border-blue-500/20">
+                        <BarChart3 className="w-6 h-6 text-blue-400" />
                     </div>
                 </div>
             </div>
@@ -139,7 +139,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsProps> = ({ reports }) => {
             {/* Productivity & Goals */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {/* Monthly Goal */}
-                <div className="md:col-span-1 bg-paper border border-line p-6 rounded-xl shadow-sm flex flex-col justify-center">
+                <div className="md:col-span-1 glass-strong border border-white/10 p-6 rounded-3xl shadow-lg flex flex-col justify-center">
                     <h4 className="text-md font-bold text-text mb-2">Meta Mensal</h4>
                     <div className="flex items-end justify-between mb-2">
                         <span className="text-3xl font-bold text-primary">{currentMonthCount}</span>
@@ -157,7 +157,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsProps> = ({ reports }) => {
                 </div>
 
                 {/* Technician Leaderboard */}
-                <div className="md:col-span-2 bg-paper border border-line p-6 rounded-xl shadow-sm">
+                <div className="md:col-span-2 glass-strong border border-white/10 p-6 rounded-3xl shadow-lg">
                     <h4 className="text-md font-bold text-text mb-4">Ranking Técnico</h4>
                     <div className="space-y-3">
                         {leaderboardData.slice(0, 3).map((tech, idx) => (
@@ -188,7 +188,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsProps> = ({ reports }) => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
                 {/* Pie Chart: Defeitos */}
-                <div className="bg-paper border border-line p-6 rounded-xl shadow-sm min-h-[300px] flex flex-col">
+                <div className="glass-strong border border-white/10 p-6 rounded-3xl shadow-lg min-h-[300px] flex flex-col">
                     <h4 className="text-md font-bold text-text mb-4">Principais Defeitos Relatados</h4>
                     <div className="flex-1 w-full h-[250px]">
                         {defectsData.length > 0 ? (
@@ -218,7 +218,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsProps> = ({ reports }) => {
                 </div>
 
                 {/* Bar Chart: Modelos */}
-                <div className="bg-paper border border-line p-6 rounded-xl shadow-sm min-h-[300px] flex flex-col">
+                <div className="glass-strong border border-white/10 p-6 rounded-3xl shadow-lg min-h-[300px] flex flex-col">
                     <h4 className="text-md font-bold text-text mb-4">Top 5 Modelos</h4>
                     <div className="flex-1 w-full h-[250px]">
                         {modelsData.length > 0 ? (

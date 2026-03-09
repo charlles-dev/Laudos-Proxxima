@@ -56,7 +56,7 @@ export const OnboardingScreen: React.FC<OnboardingProps> = ({ onComplete }) => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-surface/80 backdrop-blur-sm overflow-hidden"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-surface/80 backdrop-blur-xl overflow-hidden px-4"
         >
             {/* Animated Background Blobs */}
             <motion.div
@@ -85,12 +85,12 @@ export const OnboardingScreen: React.FC<OnboardingProps> = ({ onComplete }) => {
                 initial="hidden"
                 animate="visible"
                 exit="exit"
-                className="relative z-10 w-full max-w-md p-8 bg-paper/90 border border-line rounded-2xl shadow-2xl backdrop-blur-md"
+                className="relative z-10 w-full max-w-md p-8 md:p-10 glass-strong border border-white/10 rounded-3xl shadow-2xl"
             >
                 <div className="text-center mb-8">
                     <motion.div
                         variants={itemVariants}
-                        className="w-20 h-20 bg-gradient-to-br from-primary to-accent rounded-2xl mx-auto mb-6 flex items-center justify-center shadow-lg shadow-primary/20"
+                        className="w-20 h-20 bg-gradient-to-br from-primary to-accent rounded-3xl mx-auto mb-6 flex items-center justify-center shadow-lg shadow-primary/30"
                     >
                         <User className="w-10 h-10 text-white" />
                     </motion.div>

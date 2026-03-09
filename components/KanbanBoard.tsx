@@ -57,23 +57,23 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ reports, onUpdateStatu
                     return (
                         <div
                             key={col.id}
-                            className={`flex-1 flex flex-col rounded-xl border transition-all duration-200 h-full max-h-full
-                                ${isDragOver ? 'bg-primary/5 border-primary shadow-lg scale-[1.01]' : 'bg-paper border-line'}
+                            className={`flex-1 flex flex-col rounded-2xl border border-white/10 transition-all duration-200 h-full max-h-full
+                                ${isDragOver ? 'bg-primary/5 border-primary shadow-[0_0_30px_rgba(205,39,132,0.15)] scale-[1.01]' : 'glass-strong'}
                             `}
                             onDragOver={(e) => handleDragOver(e, col.id)}
                             onDragLeave={handleDragLeave}
                             onDrop={(e) => handleDrop(e, col.id)}
                         >
                             {/* Header */}
-                            <div className={`p-4 border-b border-line flex items-center justify-between sticky top-0 rounded-t-xl z-10 transition-colors
-                                ${isDragOver ? 'bg-primary/10' : 'bg-paper'}
+                            <div className={`p-4 border-b border-white/10 flex items-center justify-between sticky top-0 rounded-t-2xl z-10 transition-colors
+                                ${isDragOver ? 'bg-primary/10' : 'bg-transparent'}
                             `}>
                                 <div className="flex items-center gap-2">
                                     <div className={`p-1.5 rounded-lg ${col.bg}`}>
-                                        <Icon className={`w-4 h-4 ${col.id === 'open' ? 'text-blue-600' : col.id === 'in_progress' ? 'text-yellow-600' : 'text-green-600'}`} />
+                                        <Icon className={`w-4 h-4 ${col.id === 'open' ? 'text-blue-600 dark:text-blue-500' : col.id === 'in_progress' ? 'text-yellow-600 dark:text-yellow-500' : 'text-green-600 dark:text-green-500'}`} />
                                     </div>
-                                    <span className="font-bold text-text">{col.title}</span>
-                                    <span className="px-2 py-0.5 rounded-full bg-surface text-secondary text-xs font-semibold border border-line">
+                                    <span className="font-bold text-text drop-shadow-sm">{col.title}</span>
+                                    <span className="px-2 py-0.5 rounded-full bg-white/10 text-text text-xs font-semibold border border-white/20 shadow-inner">
                                         {colReports.length}
                                     </span>
                                 </div>
@@ -87,10 +87,10 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ reports, onUpdateStatu
                                         draggable
                                         onDragStart={(e) => handleDragStart(e, report.id)}
                                         onClick={() => onViewReport(report)}
-                                        className="bg-surface p-4 rounded-lg border border-line hover:shadow-md hover:border-primary/50 cursor-pointer transition-all group active:cursor-grabbing active:scale-95 active:shadow-xl"
+                                        className="glass p-4 rounded-xl border border-white/5 hover:shadow-lg hover:border-primary/50 cursor-pointer transition-all group active:cursor-grabbing active:scale-95 active:shadow-xl"
                                     >
                                         <div className="flex justify-between items-start mb-2">
-                                            <span className="text-xs font-mono text-secondary px-1.5 py-0.5 bg-paper rounded border border-line">
+                                            <span className="text-[10px] font-bold font-mono text-secondary px-2 py-1 bg-white/5 rounded-md border border-white/10 tracking-widest uppercase">
                                                 {report.id.slice(0, 8)}
                                             </span>
                                             {report.priority === 'high' || report.priority === 'critical' ? (
@@ -98,10 +98,10 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ reports, onUpdateStatu
                                             ) : null}
                                         </div>
 
-                                        <h4 className="font-semibold text-text mb-1 line-clamp-1">{report.model}</h4>
-                                        <p className="text-secondary text-xs mb-3 line-clamp-2">{report.reportedDefect}</p>
+                                        <h4 className="font-bold text-text mb-1 line-clamp-1">{report.model}</h4>
+                                        <p className="text-secondary text-xs mb-3 line-clamp-2 leading-relaxed">{report.reportedDefect}</p>
 
-                                        <div className="flex items-center justify-between pt-2 border-t border-line/50">
+                                        <div className="flex items-center justify-between pt-3 border-t border-white/10">
                                             <div className="flex items-center gap-1.5">
                                                 <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-bold text-primary">
                                                     {report.technicianName ? report.technicianName.charAt(0).toUpperCase() : 'T'}
@@ -110,7 +110,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ reports, onUpdateStatu
                                                     {report.requesterName.split(' ')[0]}
                                                 </span>
                                             </div>
-                                            <span className="text-[10px] text-tertiary">
+                                            <span className="text-[10px] text-secondary">
                                                 {new Date(report.createdAt).toLocaleDateString()}
                                             </span>
                                         </div>

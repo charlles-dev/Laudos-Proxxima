@@ -24,10 +24,24 @@ export default {
                 fadeIn: {
                     '0%': { opacity: '0', transform: 'translateY(-10px)' },
                     '100%': { opacity: '1', transform: 'translateY(0)' },
+                },
+                shimmer: {
+                    '100%': { transform: 'translateX(100%)' },
+                },
+                pulseSoft: {
+                    '0%, 100%': { opacity: '1' },
+                    '50%': { opacity: '0.8' },
+                },
+                slideUpFade: {
+                    '0%': { opacity: '0', transform: 'translateY(20px)' },
+                    '100%': { opacity: '1', transform: 'translateY(0)' },
                 }
             },
             animation: {
                 fadeIn: 'fadeIn 0.2s ease-out',
+                shimmer: 'shimmer 2s infinite',
+                pulseSoft: 'pulseSoft 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                slideUpFade: 'slideUpFade 0.4s ease-out forwards',
             }
         }
     },

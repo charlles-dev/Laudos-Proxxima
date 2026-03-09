@@ -43,12 +43,12 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ onComp
         <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="fixed inset-0 z-[70] flex items-center justify-center bg-surface/90 backdrop-blur-md px-4"
+            className="fixed inset-0 z-[70] flex items-center justify-center bg-surface/80 backdrop-blur-xl px-4"
         >
             <motion.div
                 initial={{ scale: 0.9, y: 20 }}
                 animate={{ scale: 1, y: 0 }}
-                className="w-full max-w-md bg-paper border border-line rounded-2xl shadow-2xl p-8 relative overflow-hidden"
+                className="w-full max-w-md glass-strong border border-white/10 rounded-3xl shadow-2xl p-8 relative overflow-hidden"
             >
                 {/* Decoration */}
                 <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-primary to-accent"></div>
@@ -104,7 +104,7 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ onComp
                     <button
                         type="submit"
                         disabled={loading}
-                        className="w-full py-3 bg-primary text-white font-bold rounded-xl shadow-lg shadow-primary/20 hover:opacity-90 transition-all flex items-center justify-center gap-2 mt-6 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="w-full py-3.5 bg-primary text-white font-bold rounded-xl shadow-lg shadow-primary/25 hover:opacity-90 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2 mt-8 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                     >
                         {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Definir Nova Senha'}
                     </button>

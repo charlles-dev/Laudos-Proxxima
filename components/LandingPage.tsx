@@ -27,7 +27,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnter }) => {
 // --- Sub-components ---
 
 const Navbar: React.FC<{ onEnter: () => void }> = ({ onEnter }) => (
-    <nav className="fixed top-0 left-0 right-0 z-50 border-b border-white/5 bg-[#030712]/60 backdrop-blur-md">
+    <nav className="fixed top-0 left-0 right-0 z-50 border-b border-white/5 bg-[#030712]/40 backdrop-blur-xl">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
             <div className="flex items-center gap-2">
                 <img src="https://www.proxxima.net/storage/app/uploads/public/5ea/1f7/af7/5ea1f7af72b2c773156463.svg" alt="Proxxima" className="h-8 md:h-10 opacity-90" />
@@ -66,12 +66,12 @@ const HeroSection: React.FC<{ onEnter: () => void }> = ({ onEnter }) => {
                     transition={{ duration: 0.8, ease: "easeOut" }}
                     className="relative z-20"
                 >
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold tracking-wide mb-8 animate-pulse-slow">
-                        <span className="w-2 h-2 rounded-full bg-primary animate-ping" />
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold tracking-wide mb-8 animate-pulseSoft">
+                        <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
                         NOVA VERSÃO 2.0 DISPONÍVEL
                     </div>
 
-                    <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight leading-tight text-white mb-6">
+                    <h1 className="text-6xl md:text-8xl font-extrabold tracking-tighter leading-tight text-white mb-6">
                         Gestão Técnica <br />
                         <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-purple-400 to-primary bg-300% animate-gradient">
                             Simplesmente Foda.
@@ -119,7 +119,7 @@ const HeroSection: React.FC<{ onEnter: () => void }> = ({ onEnter }) => {
                         </div>
                     </motion.div>
 
-                    <div className="relative rounded-2xl border border-white/10 bg-[#0f111a] shadow-2xl p-2 transform rotate-y-12 rotate-x-6 hover:rotate-y-0 hover:rotate-x-0 transition-transform duration-700 ease-out preserve-3d group">
+                    <div className="relative rounded-2xl border border-white/10 bg-[#0f111a] shadow-[0_0_80px_rgba(205,39,132,0.15)] p-2 transform rotate-y-12 rotate-x-6 hover:rotate-y-0 hover:rotate-x-0 transition-transform duration-700 ease-out preserve-3d group">
                         <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-transparent to-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-2xl pointer-events-none" />
 
                         {/* Fake Browser Header */}
@@ -232,7 +232,7 @@ function SpotlightCard({ children }: { children: React.ReactNode }) {
                     background: useMotionTemplate`
                         radial-gradient(
                           400px circle at ${mouseX}px ${mouseY}px,
-                          rgba(139, 92, 246, 0.15),
+                          rgba(205, 39, 132, 0.15),
                           transparent 80%
                         )
                     `,

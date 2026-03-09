@@ -22,7 +22,7 @@ export const WelcomeBackScreen: React.FC<WelcomeBackOnlyProps> = ({ name, onComp
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.5 }}
-            className="fixed inset-0 z-[60] flex items-center justify-center bg-surface/90 backdrop-blur-md overflow-hidden"
+            className="fixed inset-0 z-[60] flex items-center justify-center bg-surface/80 backdrop-blur-xl overflow-hidden"
         >
             {/* Background Effects */}
             <motion.div

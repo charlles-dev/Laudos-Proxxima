@@ -115,8 +115,8 @@ export const ReportForm: React.FC<ReportFormProps> = ({
   };
 
   // Classes comuns
-  const inputClass = "w-full px-4 py-2 bg-surface border border-line rounded-lg focus:border-transparent outline-none transition text-txt placeholder-gray-400";
-  const labelClass = "block text-sm font-medium text-secondary mb-1.5";
+  const inputClass = "w-full pl-4 pr-4 py-3 bg-black/5 dark:bg-black/20 border border-black/10 dark:border-white/10 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-sm font-medium text-text placeholder-gray-500/70 dark:placeholder-gray-400/70";
+  const labelClass = "block text-xs font-bold text-secondary uppercase tracking-widest mb-1.5 ml-1";
 
   // Step 1: Dados do Chamado
   const renderStep1 = () => (
@@ -216,8 +216,8 @@ export const ReportForm: React.FC<ReportFormProps> = ({
 
   // Step 2: Diagnóstico & Evidências
   const renderStep2 = () => (
-    <div className="space-y-6 animate-fade-in">
-      <div className="bg-primary/5 p-4 rounded-lg border border-line">
+    <div className="space-y-6 animate-fade-in relative z-10">
+      <div className="bg-primary/5 p-5 rounded-2xl border border-primary/20 shadow-inner">
         <div className="flex justify-between items-center mb-2">
           <label className="block text-sm font-bold text-primary">Descrição Detalhada</label>
           <div className="flex gap-2">
@@ -226,7 +226,7 @@ export const ReportForm: React.FC<ReportFormProps> = ({
                 onClick={toggleListening}
                 className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold shadow-sm transition-all ${isListening
                   ? 'bg-red-500 text-white animate-pulse'
-                  : 'bg-white text-secondary border border-gray-200 hover:bg-gray-50'
+                  : 'bg-surface text-secondary border border-line hover:bg-white/5'
                   }`}
                 title="Ditar descrição"
               >
@@ -253,23 +253,28 @@ export const ReportForm: React.FC<ReportFormProps> = ({
         />
       </div>
 
-      <div className="flex items-center gap-3 p-4 bg-paper border border-line rounded-lg shadow-sm">
-        <div className={`p-2 rounded-full ${showEvidences ? 'bg-primary text-white' : 'bg-surface border border-line text-secondary'}`}>
-          <Camera className="w-5 h-5" />
+      <div className="flex items-center gap-4 p-5 glass-strong border border-white/10 rounded-2xl shadow-lg transition-all">
+        <div className={`p-3 rounded-2xl ${showEvidences ? 'bg-gradient-to-br from-primary to-accent text-white shadow-lg' : 'bg-white/5 border border-white/10 text-secondary'}`}>
+          <Camera className="w-6 h-6" />
         </div>
         <div className="flex-1">
-          <h3 className="text-sm font-semibold text-txt">Adicionar Evidências?</h3>
-          <p className="text-xs text-secondary">Incluir fotos do equipamento (Máx 5).</p>
+          <h3 className="text-sm font-bold text-text">Adicionar Evidências?</h3>
+          <p className="text-xs text-secondary mt-0.5 font-medium">Incluir fotos do equipamento (Máx 5).</p>
         </div>
-        <label className="relative inline-flex items-center cursor-pointer">
-          <input type="checkbox" checked={showEvidences} onChange={(e) => setShowEvidences(e.target.checked)} className="sr-only peer" />
-          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-        </label>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={showEvidences}
+          onClick={() => setShowEvidences(!showEvidences)}
+          className={`relative w-11 h-6 rounded-full transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-primary/30 ${showEvidences ? 'bg-primary' : 'bg-white/20 dark:bg-white/15'}`}
+        >
+          <span className={`block w-5 h-5 bg-white rounded-full shadow-md transition-transform duration-300 absolute top-0.5 ${showEvidences ? 'left-[22px]' : 'left-0.5'}`} />
+        </button>
       </div>
 
       {showEvidences && (
-        <div className="animate-fade-in-up border border-dashed border-line rounded-lg p-6 text-center bg-surface relative">
-          <p className="text-sm text-secondary mb-4">Cole imagens (Ctrl+V) ou arraste aqui</p>
+        <div className="animate-fade-in-up border-2 border-dashed border-white/10 rounded-2xl p-8 text-center bg-white/5 dark:bg-slate-900/30 relative">
+          <p className="text-sm text-secondary font-medium mb-5 tracking-wide">Cole imagens (Ctrl+V) ou arraste aqui</p>
           {/* Simple invisible paste interceptor for the whole div area */}
           <div className="flex flex-wrap gap-4"
             onPaste={async (e) => {
@@ -339,72 +344,75 @@ export const ReportForm: React.FC<ReportFormProps> = ({
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-lg mx-auto">
+      <div className="grid grid-cols-2 gap-4 max-w-lg mx-auto relative z-10">
         <button
           onClick={onPreview}
-          className="group flex flex-col items-center justify-center p-6 bg-paper border border-line rounded-xl hover:border-accent hover:shadow-lg transition-all"
+          className="group flex flex-col items-center justify-center p-4 sm:p-6 glass-strong border border-white/10 rounded-2xl hover:border-accent hover:shadow-[0_0_30px_rgba(139,92,246,0.15)] transition-all hover:-translate-y-1"
         >
-          <div className="w-12 h-12 bg-accent/10 text-accent rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-            <Eye className="w-6 h-6" />
+          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-accent/10 text-accent rounded-2xl flex items-center justify-center mb-2 sm:mb-3 group-hover:scale-110 transition-transform shadow-inner">
+            <Eye className="w-5 h-5 sm:w-6 sm:h-6" />
           </div>
-          <span className="font-semibold text-txt">Visualizar Preview</span>
-          <span className="text-xs text-secondary mt-1">Ver como ficou</span>
+          <span className="font-bold text-text text-sm sm:text-base text-center">Visualizar</span>
+          <span className="text-[10px] sm:text-xs text-secondary mt-1 font-medium text-center">Ver Preview</span>
         </button>
 
         <button
           onClick={onPrint}
-          className="group flex flex-col items-center justify-center p-6 bg-paper border border-line rounded-xl hover:border-primary hover:shadow-lg transition-all"
+          className="group flex flex-col items-center justify-center p-4 sm:p-6 glass-strong border border-white/10 rounded-2xl hover:border-primary hover:shadow-[0_0_30px_rgba(205,39,132,0.15)] transition-all hover:-translate-y-1"
         >
-          <div className="w-12 h-12 bg-primary/10 text-primary rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-            <Download className="w-6 h-6" />
+          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-primary/10 text-primary rounded-2xl flex items-center justify-center mb-2 sm:mb-3 group-hover:scale-110 transition-transform shadow-inner">
+            <Download className="w-5 h-5 sm:w-6 sm:h-6" />
           </div>
-          <span className="font-semibold text-txt">Baixar PDF</span>
-          <span className="text-xs text-secondary mt-1">Download e Impressão</span>
+          <span className="font-bold text-text text-sm sm:text-base text-center">Exportar</span>
+          <span className="text-[10px] sm:text-xs text-secondary mt-1 font-medium text-center">Baixar PDF</span>
         </button>
 
         <button
           onClick={onSave}
-          className="group flex flex-col items-center justify-center p-6 bg-paper border border-line rounded-xl hover:border-green-500 hover:shadow-lg transition-all"
+          className="group flex flex-col items-center justify-center p-4 sm:p-6 glass-strong border border-white/10 rounded-2xl hover:border-green-500 hover:shadow-[0_0_30px_rgba(34,197,94,0.15)] transition-all hover:-translate-y-1"
         >
-          <div className="w-12 h-12 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-            <Save className="w-6 h-6" />
+          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-500/10 text-green-500 rounded-2xl flex items-center justify-center mb-2 sm:mb-3 group-hover:scale-110 transition-transform shadow-inner">
+            <Save className="w-5 h-5 sm:w-6 sm:h-6" />
           </div>
-          <span className="font-semibold text-txt">Salvar Sistema</span>
-          <span className="text-xs text-secondary mt-1">Guardar no Banco</span>
+          <span className="font-bold text-text text-sm sm:text-base text-center">Salvar</span>
+          <span className="text-[10px] sm:text-xs text-secondary mt-1 font-medium text-center">Guardar no BD</span>
         </button>
 
         <button
           onClick={onEmail}
-          className="group flex flex-col items-center justify-center p-6 bg-paper border border-line rounded-xl hover:border-blue-500 hover:shadow-lg transition-all"
+          className="group flex flex-col items-center justify-center p-4 sm:p-6 glass-strong border border-white/10 rounded-2xl hover:border-blue-500 hover:shadow-[0_0_30px_rgba(59,130,246,0.15)] transition-all hover:-translate-y-1"
         >
-          <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-            <Mail className="w-6 h-6" />
+          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-500/10 text-blue-500 rounded-2xl flex items-center justify-center mb-2 sm:mb-3 group-hover:scale-110 transition-transform shadow-inner">
+            <Mail className="w-5 h-5 sm:w-6 sm:h-6" />
           </div>
-          <span className="font-semibold text-txt">Enviar Email</span>
-          <span className="text-xs text-secondary mt-1">Compartilhar link</span>
+          <span className="font-bold text-text text-sm sm:text-base text-center">Email</span>
+          <span className="text-[10px] sm:text-xs text-secondary mt-1 font-medium text-center">Compartilhar</span>
         </button>
       </div>
     </div>
   );
 
   return (
-    <div className="bg-paper p-6 rounded-lg shadow-sm border border-line h-full flex flex-col">
+    <div className="glass-strong p-6 md:p-8 rounded-3xl shadow-2xl border border-white/10 h-full flex flex-col relative overflow-hidden">
+      {/* Decorative Blur */}
+      <div className="absolute top-[-10%] right-[-10%] w-[500px] h-[500px] bg-primary/10 rounded-full blur-[100px] pointer-events-none" />
+
       {/* Wizard Progress */}
       {/* Modern Progress Bar */}
-      <div className="mb-8 px-2 md:px-4">
+      <div className="mb-8 px-2 md:px-4 relative z-10">
         <div className="flex justify-between items-end mb-3">
           <div className="animate-fade-in">
-            <span className="text-xs font-bold text-primary uppercase tracking-wider mb-1 block">Passo {currentStep} de 3</span>
-            <h2 className="text-xl font-bold text-txt leading-none">{steps[currentStep - 1].title}</h2>
+            <span className="text-[10px] font-black text-primary uppercase tracking-widest mb-1 block">Passo {currentStep} de 3</span>
+            <h2 className="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-text to-secondary leading-none">{steps[currentStep - 1].title}</h2>
           </div>
-          <span className="text-xs text-secondary hidden sm:block animate-fade-in text-right max-w-[200px] leading-tight">
+          <span className="text-xs text-secondary hidden sm:block animate-fade-in text-right max-w-[200px] leading-tight font-medium">
             {steps[currentStep - 1].desc}
           </span>
         </div>
 
-        <div className="h-2 bg-surface border border-line rounded-full overflow-hidden relative">
+        <div className="h-2.5 bg-black/5 dark:bg-slate-900/50 border border-white/5 rounded-full overflow-hidden relative shadow-inner">
           <div
-            className="h-full bg-primary shadow-[0_0_10px_rgba(235,35,133,0.5)] transition-all duration-700 ease-out relative overflow-hidden"
+            className="h-full bg-gradient-to-r from-primary to-accent shadow-[0_0_15px_rgba(205,39,132,0.6)] transition-all duration-700 ease-out relative overflow-hidden"
             style={{ width: `${(currentStep / 3) * 100}%` }}
           >
             <div className="absolute inset-0 bg-white/20 animate-shimmer"></div>
@@ -413,20 +421,20 @@ export const ReportForm: React.FC<ReportFormProps> = ({
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto min-h-[400px] pr-2 custom-scrollbar">
+      <div className="flex-1 overflow-y-auto min-h-0 pr-2 custom-scrollbar relative z-10">
         {currentStep === 1 && renderStep1()}
         {currentStep === 2 && renderStep2()}
         {currentStep === 3 && renderStep3()}
       </div>
 
       {/* Navigation Buttons */}
-      <div className="flex justify-between mt-6 pt-4 border-t border-line">
+      <div className="flex justify-between mt-auto pt-6 border-t border-white/10 relative z-10 shrink-0">
         <button
           onClick={prevStep}
           disabled={currentStep === 1}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${currentStep === 1
-            ? 'text-line cursor-not-allowed hidden'
-            : 'text-secondary hover:bg-surface border border-transparent hover:border-line'
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold transition-all ${currentStep === 1
+            ? 'opacity-0 cursor-default pointer-events-none'
+            : 'text-secondary hover:bg-white/5 border border-transparent hover:border-white/10 hover:text-text'
             }`}
         >
           <ArrowLeft className="w-4 h-4" /> Voltar
@@ -435,14 +443,14 @@ export const ReportForm: React.FC<ReportFormProps> = ({
         {currentStep < 3 ? (
           <button
             onClick={nextStep}
-            className="flex items-center gap-2 px-6 py-2 bg-primary text-white rounded-lg font-bold shadow-md hover:bg-opacity-90 transition-all ml-auto"
+            className="flex items-center gap-2 px-8 py-2.5 bg-primary text-white rounded-xl font-bold shadow-[0_4px_14px_0_rgba(205,39,132,0.39)] hover:shadow-[0_6px_20px_rgba(205,39,132,0.23)] hover:scale-[1.02] active:scale-95 transition-all ml-auto"
           >
             Próximo <ArrowRight className="w-4 h-4" />
           </button>
         ) : (
           <button
             onClick={() => window.location.reload()} // Reset or similar action for "New"
-            className="flex items-center gap-2 px-6 py-2 bg-surface text-secondary hover:bg-paper border border-line rounded-lg font-medium transition-all ml-auto"
+            className="flex items-center gap-2 px-8 py-2.5 glass-strong text-text border border-white/10 rounded-xl font-bold hover:bg-white/5 transition-all ml-auto"
           >
             Novo Laudo
           </button>

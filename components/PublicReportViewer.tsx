@@ -26,10 +26,11 @@ export const PublicReportViewer: React.FC<PublicReportViewerProps> = ({ reportId
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50">
-                <div className="flex flex-col items-center gap-4">
-                    <Loader2 className="w-10 h-10 text-[var(--darkslateblue)] animate-spin" />
-                    <p className="text-gray-500 font-medium">Verificando autenticidade...</p>
+            <div className="min-h-screen flex items-center justify-center bg-surface relative overflow-hidden">
+                <div className="absolute inset-0 pointer-events-none opacity-20 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-primary via-transparent to-transparent" />
+                <div className="flex flex-col items-center gap-4 relative z-10 glass-strong p-8 rounded-3xl border border-white/10 shadow-2xl">
+                    <Loader2 className="w-12 h-12 text-primary animate-spin" />
+                    <p className="text-text font-bold tracking-wide uppercase text-sm">Verificando autenticidade...</p>
                 </div>
             </div>
         );
@@ -37,16 +38,18 @@ export const PublicReportViewer: React.FC<PublicReportViewerProps> = ({ reportId
 
     if (error || !report) {
         return (
-            <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-4">
-                <div className="bg-white p-8 rounded-2xl shadow-xl text-center max-w-md w-full border border-gray-100">
-                    <div className="bg-red-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
-                        <AlertTriangle className="w-10 h-10 text-red-500" />
+            <div className="min-h-screen flex flex-col items-center justify-center bg-surface p-4 relative overflow-hidden">
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-red-500/10 rounded-full blur-[120px] pointer-events-none" />
+                
+                <div className="glass-strong p-10 rounded-3xl shadow-2xl text-center max-w-md w-full border border-red-500/20 relative z-10">
+                    <div className="bg-red-500/10 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-8 shadow-inner border border-red-500/20">
+                        <AlertTriangle className="w-12 h-12 text-red-500 animate-pulse" />
                     </div>
-                    <h1 className="text-2xl font-bold text-gray-800 mb-2">Documento Não Encontrado</h1>
-                    <p className="text-gray-500 mb-6">
-                        Não foi possível validar este laudo. Verifique se o link está correto ou se o documento foi removido.
+                    <h1 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-orange-500 mb-3">Documento Não Encontrado</h1>
+                    <p className="text-secondary text-sm mb-8 leading-relaxed font-medium">
+                        Não foi possível validar este laudo ou encontrar suas informações. Verifique se o link fornecido está correto ou se o documento foi removido do sistema.
                     </p>
-                    <div className="text-xs text-gray-400 border-t pt-4">
+                    <div className="text-[10px] text-secondary border-t border-white/10 pt-6 font-mono tracking-widest uppercase">
                         Ref: {reportId}
                     </div>
                 </div>
@@ -55,36 +58,37 @@ export const PublicReportViewer: React.FC<PublicReportViewerProps> = ({ reportId
     }
 
     return (
-        <div className="min-h-screen bg-gray-100 py-8 px-4 font-sans relative overflow-x-hidden">
+        <div className="min-h-screen bg-surface py-8 px-4 font-sans relative overflow-x-hidden transition-colors">
 
             {/* Background Pattern */}
-            <div className="absolute inset-0 opacity-[0.03] pointer-events-none"
-                style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, #000 1px, transparent 0)', backgroundSize: '40px 40px' }}>
-            </div>
+            <div className="absolute inset-0 pointer-events-none opacity-20 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-primary/10 via-surface to-surface" />
+            <div className="absolute inset-0 pointer-events-none opacity-[0.02]" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, var(--tw-colors-primary) 1px, transparent 0)', backgroundSize: '30px 30px' }} />
 
             {/* Verification Header */}
             <div className="max-w-4xl mx-auto mb-8 relative z-10 w-full">
-                <div className="bg-white border-l-4 border-green-500 rounded-r-lg shadow-sm p-4 md:p-6 flex flex-col md:flex-row items-center md:justify-between gap-4 md:gap-6 text-center md:text-left">
-                    <div className="flex flex-col md:flex-row items-center gap-4">
-                        <div className="bg-green-100 p-3 rounded-full">
-                            <ShieldCheck className="w-8 h-8 text-green-600" />
+                <div className="glass-strong border border-green-500/30 rounded-3xl shadow-2xl p-6 md:p-8 flex flex-col md:flex-row items-center md:justify-between gap-6 text-center md:text-left relative overflow-hidden transition-all">
+                    <div className="absolute top-0 left-0 w-2 h-full bg-gradient-to-b from-green-400 to-green-600" />
+                    
+                    <div className="flex flex-col md:flex-row items-center gap-5 ml-2">
+                        <div className="bg-green-500/10 p-4 rounded-2xl border border-green-500/20 shadow-inner flex shrink-0 items-center justify-center">
+                            <ShieldCheck className="w-10 h-10 text-green-500" />
                         </div>
                         <div>
-                            <h2 className="text-gray-900 font-bold text-lg md:text-xl flex flex-col md:flex-row items-center gap-2 justify-center md:justify-start">
+                            <h2 className="text-text font-black text-xl md:text-2xl flex flex-col md:flex-row items-center gap-3 justify-center md:justify-start">
                                 Laudo Técnico Autêntico
-                                <span className="bg-green-100 text-green-700 text-[10px] px-2 py-0.5 rounded-full border border-green-200 uppercase tracking-wide">Verificado</span>
+                                <span className="bg-green-500/10 text-green-500 text-[10px] px-3 py-1 rounded-full border border-green-500/20 shadow-inner uppercase tracking-widest font-bold">Verificado Oficialmente</span>
                             </h2>
-                            <p className="text-gray-500 text-sm mt-1">
-                                Emitido por <strong className="text-gray-700">{report.technicianName}</strong><br className="md:hidden" />
-                                <span className="hidden md:inline"> • </span>
+                            <p className="text-secondary text-sm mt-2 font-medium">
+                                Emitido por <strong className="text-text font-bold">{report.technicianName}</strong><br className="md:hidden" />
+                                <span className="hidden md:inline text-white/20 mx-2">|</span>
                                 {new Date(report.date).toLocaleDateString('pt-BR')}
                             </p>
                         </div>
                     </div>
 
-                    <div className="w-full md:w-auto text-center md:text-right border-t md:border-0 pt-4 md:pt-0 mt-2 md:mt-0">
-                        <p className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold mb-1">Hash de Validação</p>
-                        <code className="bg-gray-50 px-3 py-1.5 rounded text-xs font-mono text-gray-600 border border-gray-200 select-all block md:inline-block">
+                    <div className="w-full md:w-auto text-center md:text-right border-t border-white/10 md:border-0 pt-6 md:pt-0 mt-2 md:mt-0">
+                        <p className="text-[10px] text-secondary uppercase tracking-widest font-bold mb-2 ml-1">Hash de Validação</p>
+                        <code className="bg-black/5 dark:bg-slate-900/50 px-4 py-2 rounded-xl text-xs font-mono text-text border border-white/5 select-all block md:inline-block shadow-inner tracking-wider">
                             {(report as any).refId || report.id}
                         </code>
                     </div>
@@ -102,7 +106,7 @@ export const PublicReportViewer: React.FC<PublicReportViewerProps> = ({ reportId
                 </div>
             </div>
 
-            <div className="text-center text-gray-400 text-xs fixed bottom-6 left-0 w-full pointer-events-none">
+            <div className="text-center text-secondary font-medium text-xs fixed bottom-6 left-0 w-full pointer-events-none">
                 © {new Date().getFullYear()} Proxxima Telecom. Validação Digital.
             </div>
         </div>

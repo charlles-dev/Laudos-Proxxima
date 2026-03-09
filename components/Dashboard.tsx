@@ -239,19 +239,19 @@ export const Dashboard: React.FC<DashboardProps> = ({ onCreateNew, onViewReport,
     const getStatusStyles = (status: string) => {
         switch (status) {
             case 'open':
-                return 'bg-blue-500/10 text-blue-500 border-blue-500/20 hover:bg-blue-500/20';
+                return 'bg-blue-500 text-white hover:bg-blue-600 border-transparent shadow-[0_0_10px_rgba(59,130,246,0.3)]';
             case 'in_progress':
-                return 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20 hover:bg-yellow-500/20';
+                return 'bg-yellow-500 text-white hover:bg-yellow-600 border-transparent shadow-[0_0_10px_rgba(234,179,8,0.3)]';
             case 'closed':
-                return 'bg-green-500/10 text-green-500 border-green-500/20 hover:bg-green-500/20';
+                return 'bg-green-500 text-white hover:bg-green-600 border-transparent shadow-[0_0_10px_rgba(34,197,94,0.3)]';
             default:
-                return 'bg-secondary/10 text-secondary border-line';
+                return 'bg-surface text-secondary border-line';
         }
     };
 
     // Render Table Row
     const renderRow = (report: SavedReport) => (
-        <tr key={report.id} className={`hover:bg-surface/50 transition-colors border-b border-line last:border-0 group ${selectedIds.has(report.id) ? 'bg-primary/5' : ''}`}>
+        <tr key={report.id} className={`hover:bg-white/5 transition-all text-sm border-b border-white/5 last:border-0 group ${selectedIds.has(report.id) ? 'bg-primary/10' : ''}`}>
             <td className="px-6 py-4 whitespace-nowrap">
                 <input
                     type="checkbox"
@@ -259,7 +259,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onCreateNew, onViewReport,
                     onChange={() => toggleSelection(report.id)}
                 />
             </td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-secondary">
+            <td className="px-6 py-4 whitespace-nowrap text-secondary font-medium">
                 {report.createdAt ? new Date(report.createdAt).toLocaleDateString() : '-'}
             </td>
             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-primary">
@@ -275,24 +275,24 @@ export const Dashboard: React.FC<DashboardProps> = ({ onCreateNew, onViewReport,
                 {report.reportedDefect && report.reportedDefect.length > 20 ? report.reportedDefect.slice(0, 20) + '...' : report.reportedDefect}
             </td>
 
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-text font-medium">
+            <td className="px-6 py-4 whitespace-nowrap text-text font-bold">
                 {report.technicianName ? report.technicianName.split(' ').slice(0, 2).join(' ') : '-'}
             </td>
-            <td className="px-6 py-4 whitespace-nowrap text-xs">
-                <div onClick={(e) => e.stopPropagation()}>
+            <td className="px-6 py-4 whitespace-nowrap text-xs text-right md:text-left min-w-[150px]">
+                <div onClick={(e) => e.stopPropagation()} className="inline-block">
                     <Select value={report.status || 'open'} onValueChange={(val) => handleUpdateStatus(report.id, val as any)}>
-                        <SelectTrigger className={`w-18 h-8 text-xs font-semibold border transition-all ${getStatusStyles(report.status || 'open')}`}>
+                        <SelectTrigger className={`w-32 h-9 px-3 text-[11px] font-bold uppercase tracking-wider border-none rounded-full transition-all focus:ring-0 ${getStatusStyles(report.status || 'open')}`}>
                             <SelectValue />
                         </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="open">
-                                <span className="text-blue-500 font-medium">Aberto</span>
+                        <SelectContent className="glass-strong border-white/10 z-[100] min-w-[140px]">
+                            <SelectItem value="open" className="hover:bg-white/5 cursor-pointer">
+                                <span className="text-blue-500 font-bold dark:text-blue-400">Aberto</span>
                             </SelectItem>
-                            <SelectItem value="in_progress">
-                                <span className="text-yellow-500 font-medium">Em Análise</span>
+                            <SelectItem value="in_progress" className="hover:bg-white/5 cursor-pointer">
+                                <span className="text-yellow-500 font-bold dark:text-yellow-400">Em Análise</span>
                             </SelectItem>
-                            <SelectItem value="closed">
-                                <span className="text-green-500 font-medium">Fechado</span>
+                            <SelectItem value="closed" className="hover:bg-white/5 cursor-pointer">
+                                <span className="text-green-500 font-bold dark:text-green-400">Fechado</span>
                             </SelectItem>
                         </SelectContent>
                     </Select>
@@ -306,7 +306,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onCreateNew, onViewReport,
 
     return (
         <div className="flex-1 flex flex-col items-center p-6 bg-surface overflow-hidden h-full">
-            <div className="relative w-full max-w-[1200px] h-full flex flex-col">
+            <div className="relative w-full max-w-[1600px] h-full flex flex-col">
 
                 {/* Top Controls */}
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 shrink-0">
@@ -320,23 +320,22 @@ export const Dashboard: React.FC<DashboardProps> = ({ onCreateNew, onViewReport,
                     <div className="flex items-center gap-3 w-full md:w-auto">
                         <button
                             onClick={onCreateNew}
-                            className="flex items-center gap-2 px-4 py-2 bg-primary hover:opacity-90 text-white rounded-lg shadow-sm transition text-sm font-semibold whitespace-nowrap"
+                            className="flex items-center gap-2 px-6 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl shadow-[0_4px_14px_0_rgba(205,39,132,0.39)] hover:shadow-[0_6px_20px_rgba(205,39,132,0.23)] hover:scale-[1.02] active:scale-95 transition-all text-sm font-bold whitespace-nowrap"
                         >
-                            <Plus className="w-4 h-4" />
+                            <Plus className="w-5 h-5" />
                             Novo Laudo
                         </button>
                     </div>
                 </div>
 
                 {/* Tabs & Search Bar Row */}
-                {/* Tabs & Search Bar Row */}
-                <div className="flex flex-col md:flex-row justify-between items-center border-b border-line mb-6 gap-4">
+                <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-6 relative z-10 block">
 
-                    {/* Tabs */}
-                    <div className="flex items-center gap-4 overflow-x-auto w-full md:w-auto">
+                    {/* Tabs (Segmented Control Style) */}
+                    <div className="flex items-center p-1 bg-surface/80 backdrop-blur-md border border-white/5 rounded-full overflow-x-auto w-full md:w-auto shadow-sm">
                         <button
                             onClick={() => setActiveTab('my')}
-                            className={`flex items-center gap-2 pb-3 px-2 border-b-2 transition text-sm font-medium whitespace-nowrap ${activeTab === 'my' ? 'border-primary text-primary' : 'border-transparent text-secondary hover:text-text'}`}
+                            className={`flex items-center gap-2 py-2 px-5 rounded-full transition-all text-sm font-bold whitespace-nowrap ${activeTab === 'my' ? 'bg-primary text-white shadow-md' : 'text-secondary hover:text-text hover:bg-white/5'}`}
                         >
                             <FileText className="w-4 h-4" />
                             Meus Laudos
@@ -345,7 +344,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onCreateNew, onViewReport,
                         {/* BI Tab - Always Visible, Second Position */}
                         <button
                             onClick={() => setActiveTab('bi')}
-                            className={`flex items-center gap-2 pb-3 px-2 border-b-2 transition text-sm font-medium whitespace-nowrap ${activeTab === 'bi' ? 'border-primary text-primary' : 'border-transparent text-secondary hover:text-text'}`}
+                            className={`flex items-center gap-2 py-2 px-5 rounded-full transition-all text-sm font-bold whitespace-nowrap ${activeTab === 'bi' ? 'bg-primary text-white shadow-md' : 'text-secondary hover:text-text hover:bg-white/5'}`}
                         >
                             <BarChart2 className="w-4 h-4" />
                             BI / Analítico
@@ -353,16 +352,16 @@ export const Dashboard: React.FC<DashboardProps> = ({ onCreateNew, onViewReport,
 
                         <button
                             onClick={() => setActiveTab('all')}
-                            className={`flex items-center gap-2 pb-3 px-2 border-b-2 transition text-sm font-medium whitespace-nowrap ${activeTab === 'all' ? 'border-primary text-primary' : 'border-transparent text-secondary hover:text-text'}`}
+                            className={`flex items-center gap-2 py-2 px-5 rounded-full transition-all text-sm font-bold whitespace-nowrap ${activeTab === 'all' ? 'bg-primary text-white shadow-md' : 'text-secondary hover:text-text hover:bg-white/5'}`}
                         >
                             <List className="w-4 h-4" />
-                            Todos os Laudos
+                            Todos
                         </button>
 
                         {isAdmin && (
                             <button
                                 onClick={() => setActiveTab('logs')}
-                                className={`flex items-center gap-2 pb-3 px-2 border-b-2 transition text-sm font-medium whitespace-nowrap ${activeTab === 'logs' ? 'border-primary text-primary' : 'border-transparent text-secondary hover:text-text'}`}
+                                className={`flex items-center gap-2 py-2 px-5 rounded-full transition-all text-sm font-bold whitespace-nowrap ${activeTab === 'logs' ? 'bg-primary text-white shadow-md' : 'text-secondary hover:text-text hover:bg-white/5'}`}
                             >
                                 <ActivityLogIcon className="w-4 h-4" />
                                 Logs
@@ -372,29 +371,29 @@ export const Dashboard: React.FC<DashboardProps> = ({ onCreateNew, onViewReport,
 
                     {/* Search & Filter & View Toggle Trigger */}
                     {(activeTab === 'my' || activeTab === 'all') && (
-                        <div className="flex items-center gap-2 w-full md:w-auto pb-2">
-                            <div className="relative flex-1 md:w-64">
+                        <div className="flex items-center gap-3 w-full md:w-auto">
+                            <div className="relative flex-1 md:w-64 group">
                                 <input
                                     type="text"
                                     placeholder="Buscar por ID, Cliente, Modelo..."
-                                    className="w-full pl-10 pr-4 py-2 bg-paper border border-line rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-sm transition-all"
+                                    className="w-full pl-11 pr-4 py-2.5 bg-black/5 dark:bg-black/20 border border-black/10 dark:border-white/10 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm transition-all font-medium placeholder-gray-500/70 dark:placeholder-gray-400/70"
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
                                 />
-                                <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+                                <Search className="absolute left-3.5 top-3 w-4 h-4 text-gray-400 group-focus-within:text-primary transition-colors" />
                             </div>
 
-                            <div className="flex items-center gap-1 bg-paper border border-line rounded-lg p-1">
+                            <div className="flex items-center gap-1 bg-surface border border-line rounded-xl p-1 shadow-sm">
                                 <button
                                     onClick={() => setViewType('list')}
-                                    className={`p-1.5 rounded transition-all ${viewType === 'list' ? 'bg-surface shadow-sm text-primary' : 'text-secondary hover:text-text'}`}
+                                    className={`p-2 rounded-lg transition-all ${viewType === 'list' ? 'bg-paper shadow text-primary' : 'text-secondary hover:text-text'}`}
                                     title="Lista"
                                 >
                                     <TableIcon className="w-4 h-4" />
                                 </button>
                                 <button
                                     onClick={() => setViewType('kanban')}
-                                    className={`p-1.5 rounded transition-all ${viewType === 'kanban' ? 'bg-surface shadow-sm text-primary' : 'text-secondary hover:text-text'}`}
+                                    className={`p-2 rounded-lg transition-all ${viewType === 'kanban' ? 'bg-paper shadow text-primary' : 'text-secondary hover:text-text'}`}
                                     title="Kanban"
                                 >
                                     <LayoutGrid className="w-4 h-4" />
@@ -403,12 +402,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ onCreateNew, onViewReport,
 
                             <button
                                 onClick={() => setShowFilters(!showFilters)}
-                                className={`p-2 rounded-lg border transition-colors flex items-center gap-2 ${showFilters || activeFilterCount > 0 ? 'bg-primary/10 border-primary text-primary' : 'bg-paper border-line text-secondary hover:border-primary/50'}`}
+                                className={`p-2.5 rounded-xl border transition-all flex items-center gap-2 hover:scale-105 active:scale-95 ${showFilters || activeFilterCount > 0 ? 'bg-primary/10 border-primary text-primary shadow-inner' : 'bg-surface border-line text-secondary hover:border-primary/50 hover:shadow-sm'}`}
                                 title="Filtros"
                             >
                                 <List className="w-4 h-4" />
                                 {activeFilterCount > 0 && (
-                                    <span className="bg-primary text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full">{activeFilterCount}</span>
+                                    <span className="bg-primary text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full font-bold">{activeFilterCount}</span>
                                 )}
                             </button>
                         </div>
@@ -417,7 +416,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onCreateNew, onViewReport,
 
                 {/* Advanced Filters Panel */}
                 {(showFilters && (activeTab === 'my' || activeTab === 'all')) && (
-                    <div className="bg-paper border border-line p-4 rounded-xl mb-6 grid grid-cols-1 md:grid-cols-4 gap-4 animate-fade-in-down shadow-sm">
+                    <div className="glass-strong border border-white/10 p-5 rounded-2xl mb-8 grid grid-cols-1 md:grid-cols-4 gap-5 animate-slideUpFade shadow-xl relative z-20">
                         <div className="flex flex-col gap-1">
                             <label className="text-xs font-semibold text-secondary uppercase">Status</label>
                             <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -502,8 +501,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ onCreateNew, onViewReport,
 
                 {/* Floating Bulk Action Bar */}
                 {selectedIds.size > 0 && (
-                    <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 z-50">
-                        <div className="bg-paper/95 backdrop-blur-sm text-text px-4 py-2 rounded-full shadow-2xl flex items-center gap-4 animate-fade-in-up border border-line whitespace-nowrap">
+                    <div className="absolute bottom-8 left-0 w-full flex justify-center pointer-events-none z-[100]">
+                        <div className="bg-paper/95 backdrop-blur-sm text-text px-5 py-2.5 rounded-full shadow-2xl flex items-center gap-4 animate-fade-in-up border border-line whitespace-nowrap pointer-events-auto">
                             <span className="font-semibold text-sm">{selectedIds.size} selecionado(s)</span>
 
                             <div className="h-4 w-px bg-line"></div>
@@ -595,11 +594,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ onCreateNew, onViewReport,
                             {(activeTab === 'my' || activeTab === 'all') && (
                                 <>
                                     {viewType === 'list' ? (
-                                        <div className="bg-paper rounded-xl shadow-sm border border-line overflow-hidden">
-                                            <table className="min-w-full divide-y divide-line">
-                                                <thead className="bg-surface/50">
+                                        <div className="glass-strong rounded-2xl shadow-xl border border-white/10 overflow-x-auto">
+                                            <table className="min-w-full divide-y divide-line/50">
+                                                <thead className="bg-surface/80 backdrop-blur-sm">
                                                     <tr>
-                                                        <th className="px-6 py-3 text-left">
+                                                        <th className="px-6 py-4 text-left">
                                                             <input
                                                                 type="checkbox"
                                                                 checked={filteredReports.length > 0 && selectedIds.size === filteredReports.length}
@@ -610,11 +609,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ onCreateNew, onViewReport,
                                                         <th className="px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">ID</th>
                                                         <th className="px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">Modelo / Cliente</th>
                                                         <th className="px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">Defeito</th>
-                                                        <th className="px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">Técnico</th>
-                                                        <th className="min-w-[130px] px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">Status</th>
+                                                        <th className="px-6 py-3 text-left text-xs font-bold text-secondary uppercase tracking-wider">Técnico</th>
+                                                        <th className="px-6 py-3 text-left text-xs font-bold text-secondary uppercase tracking-wider">Status</th>
                                                     </tr>
                                                 </thead>
-                                                <tbody className="bg-paper divide-y divide-line">
+                                                <tbody className="bg-transparent divide-y divide-white/5">
                                                     {filteredReports.length > 0 ? (
                                                         filteredReports.map(renderRow)
                                                     ) : (
