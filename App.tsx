@@ -4,12 +4,13 @@ import { INITIAL_DATA, ReportData, generateRefId } from './types';
 import { ReportForm } from './components/ReportForm';
 import { ReportPreview } from './components/ReportPreview';
 import { PreviewModal } from './components/PreviewModal';
+import { EmailModal } from './components/EmailModal';
 import { generateTechnicalReport } from './services/aiService';
 import { themes } from './themes';
 import { Download, Mail, Share2, CheckCircle2, Loader2, Moon, Sun, Save, LogOut, User as UserIcon, Eye, EyeOff, ChevronLeft } from 'lucide-react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { LoginScreen } from './components/LoginScreen';
-import { saveReport, getUserProfile, updateUserProfile, UserProfile } from './services/supabaseService';
+import { saveReport, updateReport, getUserProfile, updateUserProfile, UserProfile } from './services/supabaseService';
 import { Dashboard } from './components/Dashboard';
 import { OnboardingScreen } from './components/OnboardingScreen';
 import Joyride, { CallBackProps, STATUS, Step } from 'react-joyride';
@@ -61,8 +62,9 @@ const AppContent: React.FC = () => {
   // Theme State
   const [currentThemeId, setCurrentThemeId] = useState('light');
 
-  // Preview Modal State
+  // Modal States
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
 
   // Auto Save Hook
   const { checkDraft, clearDraft } = useAutoSave(data, setData);
@@ -88,6 +90,30 @@ const AppContent: React.FC = () => {
   // Shortcuts
   useKeyboardShortcuts([
     {
+      key: 'n',
+      alt: true,
+      action: () => {
+        if (viewMode === 'dashboard') handleCreateNew();
+      },
+      preventDefault: true
+    },
+    {
+      key: 'p',
+      alt: true,
+      action: () => {
+        if (viewMode === 'editor') setIsPreviewOpen(true);
+      },
+      preventDefault: true
+    },
+    {
+      key: 'd',
+      alt: true,
+      action: () => {
+        if (isPreviewOpen || viewMode === 'editor') handleDownloadPDF();
+      },
+      preventDefault: true
+    },
+    {
       key: 's',
       ctrl: true,
       action: () => {
@@ -108,6 +134,8 @@ const AppContent: React.FC = () => {
       action: () => {
         if (showProfileModal) setShowProfileModal(false);
         if (showToast) setShowToast(false);
+        if (isPreviewOpen) setIsPreviewOpen(false);
+        if (isEmailModalOpen) setIsEmailModalOpen(false);
       }
     }
   ]);
@@ -167,7 +195,9 @@ const AppContent: React.FC = () => {
             uid: currentUser.id,
             displayName: currentUser.displayName || '',
             email: currentUser.email || '',
-            hasCompletedOnboarding: false
+            hasCompletedOnboarding: false,
+            jobTitle: '',
+            role: 'tech'
           });
           // Also trigger welcome if profile is missing (brand new user)
           if (!showChangePassword && !showOnboarding && !showWelcome) {
@@ -215,12 +245,13 @@ const AppContent: React.FC = () => {
 
   const handleOnboardingComplete = async (profileData: Partial<UserProfile>) => {
     if (!currentUser) return;
-    const newProfile = {
+    const newProfile: UserProfile = {
       uid: currentUser.id,
       email: currentUser.email || '',
       displayName: profileData.displayName || '',
       jobTitle: profileData.jobTitle || '',
-      hasCompletedOnboarding: true
+      hasCompletedOnboarding: true,
+      role: 'tech'
     };
     await updateUserProfile(currentUser.id, newProfile);
     setUserProfile(newProfile);
@@ -265,12 +296,20 @@ const AppContent: React.FC = () => {
   };
 
   const handleCreateNew = () => {
-    setData({ ...INITIAL_DATA, refId: generateRefId() });
+    const draft = checkDraft();
+    if (draft && !draft.id && window.confirm("Encontramos um rascunho salvo que ainda não foi finalizado. Deseja continuar de onde parou?")) {
+      setData(draft);
+    } else {
+      setData({ ...INITIAL_DATA });
+    }
     setViewMode('editor');
-    // Check for draft restoration could go here
   };
 
   const handleViewReport = (report: any) => {
+    if (report.status === 'closed') {
+      alert("Este laudo está concluído/fechado e não pode ser editado. Altere o status para 'Em Análise' no painel se precisar modificá-lo.");
+      return;
+    }
     const { id, userId, createdAt, ...formData } = report;
     setData(formData);
     setViewMode('editor');
@@ -278,7 +317,8 @@ const AppContent: React.FC = () => {
 
   const handleCloneReport = (report: any) => {
     const { id, userId, createdAt, ...formData } = report;
-    setData({ ...formData, refId: generateRefId() });
+    // Removendo refId localmente para que o banco gere um novo
+    setData({ ...formData, refId: undefined });
     setViewMode('editor');
     showNotification("Laudo clonado! Agora é só salvar.");
   };
@@ -300,14 +340,19 @@ const AppContent: React.FC = () => {
       const context = `Dispositivo: ${data.deviceType} ${data.model}. Empresa: Proxxima Telecom.`;
 
       // Passa fotos para a IA (Visão Computacional)
-      const result = await generateTechnicalReport(notes, context, data.photos, 'técnico'); // Default 'técnico' for now
+      const tone = data.aiTone || 'técnico';
+      const result = await generateTechnicalReport(notes, context, data.photos, tone, data.outcomeType, data.partsRequested);
 
-      setData(prev => ({
-        ...prev,
-        reportedDefect: result.defect,
-        technicalAnalysis: result.analysis,
-        recommendation: result.recommendation
-      }));
+      setData(prev => {
+        const hasExistingParts = prev.partsRequested && prev.partsRequested.length > 0;
+        return {
+          ...prev,
+          reportedDefect: result.defect,
+          technicalAnalysis: result.analysis,
+          recommendation: result.recommendation,
+          ...(!hasExistingParts && result.partsRequested ? { partsRequested: result.partsRequested } : {})
+        };
+      });
     } catch (e) {
       alert("Erro ao conectar com a IA. Verifique sua chave de API.");
     } finally {
@@ -326,13 +371,19 @@ const AppContent: React.FC = () => {
     if (!currentUser) return;
     setIsSaving(true);
     try {
-      await saveReport(currentUser.id, data);
-      confetti({
-        particleCount: 100,
-        spread: 70,
-        origin: { y: 0.6 }
-      });
-      showNotification("Laudo salvo com sucesso!");
+      if (data.id) {
+        await updateReport(data.id, data);
+        showNotification("Laudo atualizado com sucesso!");
+      } else {
+        const newId = await saveReport(currentUser.id, data);
+        setData(prev => ({ ...prev, id: newId }));
+        confetti({
+          particleCount: 100,
+          spread: 70,
+          origin: { y: 0.6 }
+        });
+        showNotification("Laudo salvo com sucesso!");
+      }
     } catch (error) {
       console.error(error);
       alert("Erro ao salvar laudo.");
@@ -341,32 +392,22 @@ const AppContent: React.FC = () => {
     }
   };
 
+  const getEmailSubject = () => {
+    if (data.outcomeType === 'parts_request') return `Solicitação de Peça — ${data.model}`;
+    if (data.outcomeType === 'external_assistance') return `Encaminhamento para Assistência Técnica — ${data.model}`;
+    return `Registro de Atendimento Técnico — ${data.model}`;
+  };
+
   const handleEmail = () => {
-    const subject = `Laudo Técnico [PROXXIMA]: ${data.deviceType} - ${data.requesterName}`;
-    const body = `
-Prezados,
-
-Segue laudo técnico do equipamento analisado.
-
-EQUIPAMENTO: ${data.deviceType} ${data.model}
-SOLICITANTE: ${data.requesterName}
-PATRIMÔNIO: ${data.patrimonyId}
-
-RESUMO TÉCNICO:
-${data.recommendation}
-
-Atenciosamente,
-
-${data.technicianName}
-Proxxima Telecom
-    `.trim();
-    window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    setIsEmailModalOpen(true);
   };
 
   const handleCopy = () => {
-    const text = `PROXXIMA - LAUDO TÉCNICO\n\nEquipamento: ${data.model}\nDiag: ${data.technicalAnalysis}\nSolução: ${data.recommendation}`;
+    const subject = `Assunto: ${getEmailSubject()}`;
+    const body = `Corpo: "... conforme laudo técnico em anexo..."\n\nResumo Técnico:\n${data.recommendation}`;
+    const text = `${subject}\n\n${body}`;
     navigator.clipboard.writeText(text);
-    showNotification("Copiado para a área de transferência!");
+    showNotification("Modelo de e-mail copiado para a área de transferência!");
   };
 
   const handleLogout = async () => {
@@ -527,6 +568,12 @@ Proxxima Telecom
           <PreviewModal
             isOpen={isPreviewOpen}
             onClose={() => setIsPreviewOpen(false)}
+            data={data}
+          />
+
+          <EmailModal
+            isOpen={isEmailModalOpen}
+            onClose={() => setIsEmailModalOpen(false)}
             data={data}
           />
 

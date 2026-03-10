@@ -48,7 +48,10 @@ export const saveReport = async (userId: string, data: ReportData) => {
                 requester_sector: data.requesterSector,
                 photos: data.photos || [],
                 status: data.status || 'open',
-                priority: data.priority || 'normal'
+                priority: data.priority || 'normal',
+                outcome_type: data.outcomeType,
+                parts_requested: data.partsRequested,
+                internal_comments: data.internalComments
             })
             .select()
             .single();
@@ -81,7 +84,11 @@ export const updateReport = async (reportId: string, updates: Partial<ReportData
                 requester_sector: updates.requesterSector,
                 photos: updates.photos,
                 status: updates.status,
-                priority: updates.priority
+                priority: updates.priority,
+                outcome_type: updates.outcomeType,
+                parts_requested: updates.partsRequested,
+                internal_comments: updates.internalComments,
+                closed_at: updates.closedAt
             })
             .eq('id', reportId);
 
@@ -327,9 +334,13 @@ const mapReportFromDB = (dbItem: any): SavedReport => ({
     requesterName: dbItem.requester_name,
     requesterSector: dbItem.requester_sector || '',
     photos: (dbItem.photos as string[]) || [], // Type assertion needed for Jsonb
-    status: (dbItem.status as 'open' | 'in_progress' | 'closed') || 'open',
+    status: (dbItem.status as 'open' | 'in_progress' | 'awaiting_parts' | 'closed') || 'open',
     priority: (dbItem.priority as 'low' | 'normal' | 'high' | 'critical') || 'normal',
-    date: new Date(dbItem.created_at).toISOString().split('T')[0]
+    outcomeType: dbItem.outcome_type,
+    partsRequested: dbItem.parts_requested,
+    date: new Date(dbItem.created_at).toISOString().split('T')[0],
+    internalComments: dbItem.internal_comments || '',
+    closedAt: dbItem.closed_at
 });
 
 export const uploadEvidenceImage = async (file: File): Promise<string | null> => {

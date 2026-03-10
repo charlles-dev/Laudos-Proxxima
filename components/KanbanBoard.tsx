@@ -4,17 +4,19 @@ import { MoreHorizontal, Clock, AlertCircle, CheckCircle2 } from 'lucide-react';
 
 interface KanbanBoardProps {
     reports: SavedReport[];
-    onUpdateStatus: (reportId: string, newStatus: 'open' | 'in_progress' | 'closed') => void;
+    onUpdateStatus: (reportId: string, newStatus: 'open' | 'in_progress' | 'awaiting_parts' | 'closed') => void;
     onViewReport: (report: SavedReport) => void;
+    isRecurrent?: (report: SavedReport) => boolean;
 }
 
 const COLUMN_CONFIG = [
     { id: 'open', title: 'Aberto', color: 'bg-blue-500', bg: 'bg-blue-50', icon: AlertCircle },
     { id: 'in_progress', title: 'Em Análise', color: 'bg-yellow-500', bg: 'bg-yellow-50', icon: Clock },
+    { id: 'awaiting_parts', title: 'Aguardando Peça', color: 'bg-orange-500', bg: 'bg-orange-50', icon: Clock },
     { id: 'closed', title: 'Concluído', color: 'bg-green-500', bg: 'bg-green-50', icon: CheckCircle2 }
 ] as const;
 
-export const KanbanBoard: React.FC<KanbanBoardProps> = ({ reports, onUpdateStatus, onViewReport }) => {
+export const KanbanBoard: React.FC<KanbanBoardProps> = ({ reports, onUpdateStatus, onViewReport, isRecurrent }) => {
 
     const [activeDragColumn, setActiveDragColumn] = React.useState<string | null>(null);
 
@@ -37,7 +39,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ reports, onUpdateStatu
         setActiveDragColumn(null);
     }
 
-    const handleDrop = (e: React.DragEvent, status: 'open' | 'in_progress' | 'closed') => {
+    const handleDrop = (e: React.DragEvent, status: 'open' | 'in_progress' | 'awaiting_parts' | 'closed') => {
         e.preventDefault();
         setActiveDragColumn(null);
         const reportId = e.dataTransfer.getData('reportId');
@@ -70,7 +72,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ reports, onUpdateStatu
                             `}>
                                 <div className="flex items-center gap-2">
                                     <div className={`p-1.5 rounded-lg ${col.bg}`}>
-                                        <Icon className={`w-4 h-4 ${col.id === 'open' ? 'text-blue-600 dark:text-blue-500' : col.id === 'in_progress' ? 'text-yellow-600 dark:text-yellow-500' : 'text-green-600 dark:text-green-500'}`} />
+                                        <Icon className={`w-4 h-4 ${col.id === 'open' ? 'text-blue-600 dark:text-blue-500' : col.id === 'in_progress' ? 'text-yellow-600 dark:text-yellow-500' : col.id === 'awaiting_parts' ? 'text-orange-600 dark:text-orange-500' : 'text-green-600 dark:text-green-500'}`} />
                                     </div>
                                     <span className="font-bold text-text drop-shadow-sm">{col.title}</span>
                                     <span className="px-2 py-0.5 rounded-full bg-white/10 text-text text-xs font-semibold border border-white/20 shadow-inner">
@@ -99,6 +101,13 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ reports, onUpdateStatu
                                         </div>
 
                                         <h4 className="font-bold text-text mb-1 line-clamp-1">{report.model}</h4>
+                                        {isRecurrent && isRecurrent(report) && (
+                                            <div className="mb-2">
+                                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-500/10 text-red-500 border border-red-500/20">
+                                                    <AlertCircle className="w-3 h-3" /> Reincidente
+                                                </span>
+                                            </div>
+                                        )}
                                         <p className="text-secondary text-xs mb-3 line-clamp-2 leading-relaxed">{report.reportedDefect}</p>
 
                                         <div className="flex items-center justify-between pt-3 border-t border-white/10">

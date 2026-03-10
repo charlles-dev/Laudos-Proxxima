@@ -24,8 +24,13 @@ export interface ReportData {
   date: string;
   fullDescription: string;
   photos?: string[];
-  status?: 'open' | 'in_progress' | 'closed';
+  status?: 'open' | 'in_progress' | 'awaiting_parts' | 'closed';
   priority?: 'low' | 'normal' | 'high' | 'critical';
+  outcomeType?: 'internal_fix' | 'parts_request' | 'external_assistance';
+  partsRequested?: { name: string; partNumber?: string; quantity: number }[];
+  aiTone?: 'técnico' | 'didático' | 'executivo';
+  internalComments?: string;
+  closedAt?: string;
 }
 
 export const INITIAL_DATA: ReportData = {
@@ -42,7 +47,9 @@ export const INITIAL_DATA: ReportData = {
   date: new Date().toISOString().split('T')[0],
   fullDescription: '',
   status: 'open',
-  priority: 'normal'
+  priority: 'normal',
+  aiTone: 'técnico',
+  internalComments: ''
 };
 
 export const generateRefId = () => Math.random().toString(36).substr(2, 9).toUpperCase();

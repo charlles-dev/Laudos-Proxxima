@@ -11,7 +11,8 @@ import {
   Globe,
   Mail,
   Camera,
-  ExternalLink
+  ExternalLink,
+  ClipboardList
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { SkeletonLoader } from './SkeletonLoader';
@@ -55,13 +56,20 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ data, isGenerating
   };
 
   return (
-    <div id={elementId} className="bg-white shadow-2xl mx-auto flex flex-col" style={{ width: '210mm', minHeight: '297mm', padding: '0' }}>
+    <div id={elementId} className="bg-white shadow-2xl mx-auto flex flex-col relative overflow-hidden" style={{ width: '210mm', minHeight: '297mm', padding: '0' }}>
+
+      {/* Watermark for Drafts */}
+      {data.status === 'open' && (
+        <div className="absolute inset-0 z-0 flex items-center justify-center pointer-events-none opacity-[0.03] select-none text-[12rem] font-black uppercase text-black -rotate-45 tracking-widest whitespace-nowrap">
+          RASCUNHO
+        </div>
+      )}
 
       {/* 1. Faixa de Topo Decorativa */}
-      <div style={{ height: '8px', backgroundColor: COLORS.primary, width: '100%' }}></div>
+      <div className="relative z-10" style={{ height: '8px', backgroundColor: COLORS.primary, width: '100%' }}></div>
 
       {/* 2. Header Corporativo Estilo "Papel Timbrado" */}
-      <div className="px-10 py-8 flex justify-between items-start" style={{ pageBreakInside: 'avoid' }}>
+      <div className="px-10 py-8 flex justify-between items-start relative z-10" style={{ pageBreakInside: 'avoid' }}>
 
         {/* Coluna Esquerda: Marca e Contato */}
         <div className="flex flex-col gap-3">
@@ -141,7 +149,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ data, isGenerating
             <div className="col-span-2 border-t border-gray-100 pt-3 mt-1 flex items-center gap-6">
               <div className="flex items-center gap-2 text-sm text-gray-600">
                 <User className="w-4 h-4" style={{ color: COLORS.accent }} />
-                <span className="font-medium">Solicitante:</span> {data.requesterName}
+                <span className="font-medium">Colaborador:</span> {data.requesterName}
               </div>
               <div className="flex items-center gap-2 text-sm text-gray-600">
                 <MapPin className="w-4 h-4" style={{ color: COLORS.accent }} />
@@ -199,6 +207,57 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ data, isGenerating
               )}
             </div>
           </div>
+
+          {/* Peças Solicitadas */}
+          {data.outcomeType === 'parts_request' && data.partsRequested && data.partsRequested.length > 0 && (
+            <div style={{ pageBreakInside: 'avoid' }}>
+              <h3
+                className="flex items-center gap-2 font-bold uppercase text-sm border-b pb-2 mb-3"
+                style={{ color: COLORS.accent, borderColor: COLORS.border }}
+              >
+                <ClipboardList className="w-5 h-5 text-orange-500" />
+                Peças Solicitadas
+              </h3>
+              <div className="border border-orange-200 rounded-lg overflow-hidden shadow-sm">
+                <div className="bg-orange-50 px-4 py-2 border-b border-orange-100 text-xs font-bold text-orange-800 uppercase">
+                  Lista de Reposição
+                </div>
+                <table className="w-full text-sm text-left text-gray-700">
+                  <thead className="bg-orange-50/50 text-xs uppercase text-gray-500 font-bold border-b border-orange-100">
+                    <tr>
+                      <th className="px-4 py-2">Qtd</th>
+                      <th className="px-4 py-2">Item</th>
+                      <th className="px-4 py-2">Part Number</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data.partsRequested.map((part, idx) => (
+                      <tr key={idx} className="border-b border-gray-100 last:border-0 hover:bg-gray-50">
+                        <td className="px-4 py-2 font-bold text-center w-16">{part.quantity}</td>
+                        <td className="px-4 py-2 font-medium">{part.name}</td>
+                        <td className="px-4 py-2 font-mono text-gray-500">{part.partNumber || '-'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* Encaminhamento Externo / Garantia */}
+          {data.outcomeType === 'external_assistance' && (
+            <div style={{ pageBreakInside: 'avoid', marginTop: '1.5rem' }}>
+              <div className="bg-amber-50 border border-amber-200 p-4 rounded-lg flex items-start gap-4 shadow-sm">
+                <ExternalLink className="w-6 h-6 text-amber-500 shrink-0 mt-0.5" />
+                <div>
+                  <h4 className="text-amber-800 font-bold uppercase text-sm mb-1 tracking-wide">Encaminhamento Externo / Garantia</h4>
+                  <p className="text-amber-700 text-sm leading-relaxed text-justify">
+                    Este equipamento requer atendimento laboratorial especializado ou acionamento de garantia junto ao fabricante/fornecedor. O presente laudo técnico isola e detalha a falha diagnosticada em Nível 1/2 para subsidiar o envio.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Fotos / Evidências */}
           {data.photos && data.photos.length > 0 && data.photos.some(p => p.trim() !== '') && (

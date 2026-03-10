@@ -48,6 +48,10 @@ export const ReportForm: React.FC<ReportFormProps> = ({
   const { isListening, transcript, toggleListening, hasSupport } = useSpeechRecognition();
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
+  const [newPartName, setNewPartName] = useState('');
+  const [newPartPN, setNewPartPN] = useState('');
+  const [newPartQtd, setNewPartQtd] = useState<number>(1);
+
   // Efeito para adicionar o texto ditado à descrição
   useEffect(() => {
     if (transcript) {
@@ -63,7 +67,21 @@ export const ReportForm: React.FC<ReportFormProps> = ({
     onChange(field, value);
   };
 
-  const nextStep = () => setCurrentStep(prev => Math.min(prev + 1, 3));
+  const nextStep = () => {
+    if (currentStep === 1) {
+      if (!data.requesterName.trim() || !data.model.trim() || !data.deviceType) {
+        alert("Preencha o Nome do Colaborador, Equipamento e Modelo antes de avançar.");
+        return;
+      }
+    }
+    if (currentStep === 2) {
+      if (!data.reportedDefect.trim()) {
+        alert("Descreva o Problema Relatado antes de avançar.");
+        return;
+      }
+    }
+    setCurrentStep(prev => Math.min(prev + 1, 3));
+  };
   const prevStep = () => setCurrentStep(prev => Math.max(prev - 1, 1));
 
   const processFiles = async (files: File[]) => {
@@ -123,7 +141,7 @@ export const ReportForm: React.FC<ReportFormProps> = ({
     <div className="space-y-8 animate-fade-in">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label className={labelClass}>Solicitante</label>
+          <label className={labelClass}>Colaborador</label>
           <ClientAutocomplete
             name="requesterName"
             value={data.requesterName}
@@ -187,7 +205,7 @@ export const ReportForm: React.FC<ReportFormProps> = ({
             name="serialNumber"
             value={data.serialNumber}
             onChange={handleChange}
-            placeholder="S/N..."
+            placeholder="S/N... (Opcional)"
           />
         </div>
         <div>
@@ -197,7 +215,7 @@ export const ReportForm: React.FC<ReportFormProps> = ({
             name="patrimonyId"
             value={data.patrimonyId}
             onChange={handleChange}
-            placeholder="ID..."
+            placeholder="ID... (Opcional)"
           />
         </div>
         <div className="md:col-span-2">
@@ -215,119 +233,235 @@ export const ReportForm: React.FC<ReportFormProps> = ({
   );
 
   // Step 2: Diagnóstico & Evidências
-  const renderStep2 = () => (
-    <div className="space-y-6 animate-fade-in relative z-10">
-      <div className="bg-primary/5 p-5 rounded-2xl border border-primary/20 shadow-inner">
-        <div className="flex justify-between items-center mb-2">
-          <label className="block text-sm font-bold text-primary">Descrição Detalhada</label>
-          <div className="flex gap-2">
-            {hasSupport && (
-              <button
-                onClick={toggleListening}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold shadow-sm transition-all ${isListening
-                  ? 'bg-red-500 text-white animate-pulse'
-                  : 'bg-surface text-secondary border border-line hover:bg-white/5'
-                  }`}
-                title="Ditar descrição"
-              >
-                {isListening ? <MicOff className="w-3 h-3" /> : <Mic className="w-3 h-3" />}
-              </button>
-            )}
-            <button
-              onClick={onGenerateAI}
-              disabled={isGenerating || !data.fullDescription.trim()}
-              className="flex items-center gap-2 bg-accent hover:opacity-90 text-white px-3 py-1.5 rounded-full text-xs font-semibold shadow-sm transition-all disabled:opacity-50"
-            >
-              {isGenerating ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
-              Gerar com IA
-            </button>
+  const renderStep2 = () => {
+    const handleAddPart = () => {
+      onChange('partsRequested', [...(data.partsRequested || []), { name: newPartName, partNumber: newPartPN, quantity: newPartQtd }]);
+      setNewPartName('');
+      setNewPartPN('');
+      setNewPartQtd(1);
+    };
+
+    const handleRemovePart = (index: number) => {
+      const newParts = [...(data.partsRequested || [])];
+      newParts.splice(index, 1);
+      onChange('partsRequested', newParts);
+    };
+
+    return (
+      <div className="space-y-6 animate-fade-in relative z-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="bg-primary/5 p-5 rounded-2xl border border-primary/20 shadow-inner">
+            <label className="block text-sm font-bold text-primary mb-2">Tipo de Desfecho</label>
+            <div onClick={(e) => e.stopPropagation()}>
+              <Select value={data.outcomeType} onValueChange={(val: any) => onChange('outcomeType', val)}>
+                <SelectTrigger className="bg-white/10 border border-white/20">
+                  <SelectValue placeholder="Selecione o desfecho do laudo" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="internal_fix">Resolvido Internamente</SelectItem>
+                  <SelectItem value="parts_request">Solicitação de Peça</SelectItem>
+                  <SelectItem value="external_assistance">Encaminhado Assistência Externa</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="bg-secondary/5 p-5 rounded-2xl border border-secondary/20 shadow-inner">
+            <label className="block text-sm font-bold text-secondary mb-2">Tom da IA</label>
+            <div onClick={(e) => e.stopPropagation()}>
+              <Select value={data.aiTone || 'técnico'} onValueChange={(val: any) => onChange('aiTone', val)}>
+                <SelectTrigger className="bg-white/10 border border-white/20">
+                  <SelectValue placeholder="Tom do laudo" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="técnico">Técnico</SelectItem>
+                  <SelectItem value="didático">Didático</SelectItem>
+                  <SelectItem value="executivo">Executivo</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
-        <textarea
-          name="fullDescription"
-          value={data.fullDescription}
-          onChange={handleChange}
-          rows={8}
-          className={`${inputClass} mb-1`}
-          placeholder="Descreva o problema, testes e solução..."
-        />
-      </div>
 
-      <div className="flex items-center gap-4 p-5 glass-strong border border-white/10 rounded-2xl shadow-lg transition-all">
-        <div className={`p-3 rounded-2xl ${showEvidences ? 'bg-gradient-to-br from-primary to-accent text-white shadow-lg' : 'bg-white/5 border border-white/10 text-secondary'}`}>
-          <Camera className="w-6 h-6" />
-        </div>
-        <div className="flex-1">
-          <h3 className="text-sm font-bold text-text">Adicionar Evidências?</h3>
-          <p className="text-xs text-secondary mt-0.5 font-medium">Incluir fotos do equipamento (Máx 5).</p>
-        </div>
-        <button
-          type="button"
-          role="switch"
-          aria-checked={showEvidences}
-          onClick={() => setShowEvidences(!showEvidences)}
-          className={`relative w-11 h-6 rounded-full transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-primary/30 ${showEvidences ? 'bg-primary' : 'bg-white/20 dark:bg-white/15'}`}
-        >
-          <span className={`block w-5 h-5 bg-white rounded-full shadow-md transition-transform duration-300 absolute top-0.5 ${showEvidences ? 'left-[22px]' : 'left-0.5'}`} />
-        </button>
-      </div>
+        {data.outcomeType === 'parts_request' && (
+          <div className="bg-primary/5 p-5 rounded-2xl border border-primary/20 shadow-inner space-y-4">
+            <label className="block text-sm font-bold text-primary">Peças Necessárias</label>
 
-      {showEvidences && (
-        <div className="animate-fade-in-up border-2 border-dashed border-white/10 rounded-2xl p-8 text-center bg-white/5 dark:bg-slate-900/30 relative">
-          <p className="text-sm text-secondary font-medium mb-5 tracking-wide">Cole imagens (Ctrl+V) ou arraste aqui</p>
-          {/* Simple invisible paste interceptor for the whole div area */}
-          <div className="flex flex-wrap gap-4"
-            onPaste={async (e) => {
-              const items = e.clipboardData.items;
-              const files: File[] = [];
-              for (let i = 0; i < items.length; i++) {
-                if (items[i].type.indexOf("image") !== -1) {
-                  const blob = items[i].getAsFile();
-                  if (blob) files.push(blob);
-                }
-              }
-              if (files.length > 0) {
-                processFiles(files);
-              }
-            }}
-          >
-            {(data.photos || []).map((photo, index) => (
-              <div key={index} className="relative w-24 h-24 rounded-md overflow-hidden group shrink-0 shadow-sm border border-line">
-                <img src={photo} className="w-full h-full object-cover" alt="Evidence" />
+            {(data.partsRequested || []).length > 0 && (
+              <div className="space-y-2 mb-4">
+                {(data.partsRequested || []).map((part, index) => (
+                  <div key={index} className="flex justify-between items-center bg-white/5 p-3 rounded-xl border border-white/10">
+                    <div className="flex flex-col">
+                      <span className="text-sm font-bold text-text">{part.name} (x{part.quantity})</span>
+                      {part.partNumber && <span className="text-xs text-secondary">PN: {part.partNumber}</span>}
+                    </div>
+                    <button onClick={() => handleRemovePart(index)} className="text-red-500 hover:text-red-400 p-2">
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+              <div className="md:col-span-5">
+                <Input
+                  placeholder="Nome da Peça"
+                  value={newPartName}
+                  onChange={(e) => setNewPartName(e.target.value)}
+                  className="bg-white/10"
+                />
+              </div>
+              <div className="md:col-span-4">
+                <Input
+                  placeholder="Part Number (Opcional)"
+                  value={newPartPN}
+                  onChange={(e) => setNewPartPN(e.target.value)}
+                  className="bg-white/10"
+                />
+              </div>
+              <div className="md:col-span-2">
+                <Input
+                  type="number"
+                  min="1"
+                  value={newPartQtd}
+                  onChange={(e) => setNewPartQtd(parseInt(e.target.value) || 1)}
+                  className="bg-white/10"
+                />
+              </div>
+              <div className="md:col-span-1 flex items-end">
                 <button
-                  onClick={() => onChange('photos', (data.photos || []).filter((_, i) => i !== index))}
-                  className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity transform scale-75"
+                  disabled={!newPartName.trim()}
+                  onClick={handleAddPart}
+                  className="w-full h-10 bg-primary/20 hover:bg-primary/40 text-primary font-bold rounded-xl transition-all disabled:opacity-50"
                 >
-                  ×
+                  +
                 </button>
               </div>
-            ))}
-            {(data.photos || []).length < 5 && (
-              <div className="w-24 h-24 rounded-md border-2 border-dashed border-line flex items-center justify-center text-secondary hover:text-primary hover:border-primary transition cursor-pointer bg-surface hover:bg-paper shrink-0"
-                onClick={() => fileInputRef.current?.click()}
+            </div>
+          </div>
+        )}
+
+        <div className="bg-primary/5 p-5 rounded-2xl border border-primary/20 shadow-inner">
+          <div className="flex justify-between items-center mb-2">
+            <label className="block text-sm font-bold text-primary">Descrição Detalhada</label>
+            <div className="flex gap-2">
+              {hasSupport && (
+                <button
+                  onClick={toggleListening}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold shadow-sm transition-all ${isListening
+                    ? 'bg-red-500 text-white animate-pulse'
+                    : 'bg-surface text-secondary border border-line hover:bg-white/5'
+                    }`}
+                  title="Ditar descrição"
+                >
+                  {isListening ? <MicOff className="w-3 h-3" /> : <Mic className="w-3 h-3" />}
+                </button>
+              )}
+              <button
+                onClick={onGenerateAI}
+                disabled={isGenerating || !data.fullDescription.trim()}
+                className="flex items-center gap-2 bg-accent hover:opacity-90 text-white px-3 py-1.5 rounded-full text-xs font-semibold shadow-sm transition-all disabled:opacity-50"
               >
-                <span className="text-2xl font-light">+</span>
+                {isGenerating ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
+                Gerar com IA
+              </button>
+            </div>
+          </div>
+          <textarea
+            name="fullDescription"
+            value={data.fullDescription}
+            onChange={handleChange}
+            rows={8}
+            className={`${inputClass} mb-1`}
+            placeholder="Descreva o problema, testes e solução..."
+          />
+        </div>
+
+        <div className="flex items-center gap-4 p-5 glass-strong border border-white/10 rounded-2xl shadow-lg transition-all">
+          <div className={`p-3 rounded-2xl ${showEvidences ? 'bg-gradient-to-br from-primary to-accent text-white shadow-lg' : 'bg-white/5 border border-white/10 text-secondary'}`}>
+            <Camera className="w-6 h-6" />
+          </div>
+          <div className="flex-1">
+            <h3 className="text-sm font-bold text-text">Adicionar Evidências?</h3>
+            <p className="text-xs text-secondary mt-0.5 font-medium">Incluir fotos do equipamento (Máx 5).</p>
+          </div>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={showEvidences}
+            onClick={() => setShowEvidences(!showEvidences)}
+            className={`relative w-11 h-6 rounded-full transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-primary/30 ${showEvidences ? 'bg-primary' : 'bg-white/20 dark:bg-white/15'}`}
+          >
+            <span className={`block w-5 h-5 bg-white rounded-full shadow-md transition-transform duration-300 absolute top-0.5 ${showEvidences ? 'left-[22px]' : 'left-0.5'}`} />
+          </button>
+        </div>
+
+        {showEvidences && (
+          <div className="animate-fade-in-up border-2 border-dashed border-white/10 rounded-2xl p-8 text-center bg-white/5 dark:bg-slate-900/30 relative">
+            <p className="text-sm text-secondary font-medium mb-5 tracking-wide">Cole imagens (Ctrl+V) ou arraste aqui</p>
+            {/* Simple invisible paste interceptor for the whole div area */}
+            <div className="flex flex-wrap gap-4"
+              onPaste={async (e) => {
+                const items = e.clipboardData.items;
+                const files: File[] = [];
+                for (let i = 0; i < items.length; i++) {
+                  if (items[i].type.indexOf("image") !== -1) {
+                    const blob = items[i].getAsFile();
+                    if (blob) files.push(blob);
+                  }
+                }
+                if (files.length > 0) {
+                  processFiles(files);
+                }
+              }}
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={(e) => {
+                e.preventDefault();
+                const files = Array.from(e.dataTransfer.files).filter(file => file.type.startsWith('image/'));
+                if (files.length > 0) {
+                  processFiles(files);
+                }
+              }}
+            >
+              {(data.photos || []).map((photo, index) => (
+                <div key={index} className="relative w-24 h-24 rounded-md overflow-hidden group shrink-0 shadow-sm border border-line">
+                  <img src={photo} className="w-full h-full object-cover" alt="Evidence" />
+                  <button
+                    onClick={() => onChange('photos', (data.photos || []).filter((_, i) => i !== index))}
+                    className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity transform scale-75"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+              {(data.photos || []).length < 5 && (
+                <div className="w-24 h-24 rounded-md border-2 border-dashed border-line flex items-center justify-center text-secondary hover:text-primary hover:border-primary transition cursor-pointer bg-surface hover:bg-paper shrink-0"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <span className="text-2xl font-light">+</span>
+                </div>
+              )}
+              <input
+                type="file"
+                ref={fileInputRef}
+                className="hidden"
+                accept="image/*"
+                multiple
+                onChange={handleCreateFileInput}
+              />
+            </div>
+            {isUploading && (
+              <div className="absolute inset-0 bg-white/50 flex items-center justify-center z-10 rounded-lg backdrop-blur-sm">
+                <Loader2 className="animate-spin h-8 w-8 text-primary" />
+                <span className="ml-2 text-primary font-medium">Enviando imagem...</span>
               </div>
             )}
-            <input
-              type="file"
-              ref={fileInputRef}
-              className="hidden"
-              accept="image/*"
-              multiple
-              onChange={handleCreateFileInput}
-            />
           </div>
-          {isUploading && (
-            <div className="absolute inset-0 bg-white/50 flex items-center justify-center z-10 rounded-lg backdrop-blur-sm">
-              <Loader2 className="animate-spin h-8 w-8 text-primary" />
-              <span className="ml-2 text-primary font-medium">Enviando imagem...</span>
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
+        )}
+      </div>
+    );
+  };
 
   // Step 3: Conclusão & Ações
   const renderStep3 = () => (
@@ -337,11 +471,22 @@ export const ReportForm: React.FC<ReportFormProps> = ({
       </div>
 
       <div>
-        <h2 className="text-2xl font-bold text-txt mb-2">Laudo Pronto!</h2>
-        <p className="text-secondary max-w-md mx-auto">
-          Verifique os dados abaixo e escolha uma ação.
+        <h2 className="text-2xl font-bold text-text mb-2">Laudo Pronto!</h2>
+        <p className="text-secondary max-w-md mx-auto mb-6">
+          Verifique os dados abaixo e adicione anotações internas (se necessário).
           Lembre-se que as evidências aparecerão na segunda página do PDF.
         </p>
+
+        <div className="mb-8 max-w-lg mx-auto text-left">
+          <label className={labelClass}>Anotações Internas da TI (Não sairão no PDF)</label>
+          <textarea
+            name="internalComments"
+            value={data.internalComments || ''}
+            onChange={handleChange}
+            placeholder="Registros invisíveis para o cliente (ex: aguardando aprovação de verba)..."
+            className={`${inputClass} min-h-[100px] resize-y`}
+          />
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4 max-w-lg mx-auto relative z-10">

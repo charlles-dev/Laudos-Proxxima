@@ -4,7 +4,7 @@ import {
     BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
     PieChart, Pie, Cell, LineChart, Line, CartesianGrid
 } from 'recharts';
-import { BarChart3, PieChart as PieIcon, TrendingUp } from 'lucide-react';
+import { BarChart3, PieChart as PieIcon, TrendingUp, Download } from 'lucide-react';
 
 interface AnalyticsProps {
     reports: SavedReport[];
@@ -77,21 +77,160 @@ export const AnalyticsDashboard: React.FC<AnalyticsProps> = ({ reports }) => {
     }, [reports]);
     const goalProgress = Math.min((currentMonthCount / productivityGoal) * 100, 100);
 
-    // 6. Average Resolution Time (Mock/Approximate)
-    // Since we don't have "closedAt", we will use a simple "Reports Closed vs Open" ratio or specific efficiency stat
+    // 6. Average Resolution Time
     const efficiencyStats = useMemo(() => {
-        const closed = reports.filter(r => r.status === 'closed').length;
+        const closed = reports.filter(r => r.status === 'closed');
         const total = reports.length || 1;
-        const closureRate = (closed / total) * 100;
+        const closureRate = (closed.length / total) * 100;
 
-        // Find fastest technician (mock logic or real if we had data, here just top tech)
+        let totalHours = 0;
+        let validClosedCount = 0;
+
+        closed.forEach(r => {
+            if (r.createdAt && r.closedAt) {
+                const created = new Date(r.createdAt).getTime();
+                const closedTime = new Date(r.closedAt).getTime();
+                const diffHours = (closedTime - created) / (1000 * 60 * 60);
+                if (diffHours >= 0) {
+                    totalHours += diffHours;
+                    validClosedCount++;
+                }
+            }
+        });
+
+        const avgResolutionHours = validClosedCount > 0 ? (totalHours / validClosedCount) : 0;
+        const avgText = avgResolutionHours > 24
+            ? `${(avgResolutionHours / 24).toFixed(1)} dias`
+            : `${avgResolutionHours.toFixed(1)} hrs`;
+
         const topTech = leaderboardData[0]?.name || "-";
 
-        return { closureRate, topTech };
+        return { closureRate, topTech, avgText };
     }, [reports, leaderboardData]);
+
+    // 7. Outcome Distribution
+    const outcomeData = useMemo(() => {
+        const counts: Record<string, number> = {};
+        reports.forEach(r => {
+            const outcome = r.outcomeType || "Não Definido";
+            counts[outcome] = (counts[outcome] || 0) + 1;
+        });
+
+        const labels: Record<string, string> = {
+            'internal_fix': 'Reparo Interno',
+            'parts_request': 'Peça Solicitada',
+            'external_assistance': 'Assist. Externa',
+            'Não Definido': 'Não Definido'
+        };
+
+        return Object.keys(counts)
+            .filter(key => counts[key] > 0)
+            .map(key => ({ name: labels[key] || key, value: counts[key] }));
+    }, [reports]);
+
+    // 8. Most Requested Parts
+    const requestedPartsData = useMemo(() => {
+        const partsCount: Record<string, number> = {};
+        reports.forEach(r => {
+            if (r.partsRequested && Array.isArray(r.partsRequested)) {
+                r.partsRequested.forEach(part => {
+                    if (part.name) {
+                        const nameLower = part.name.trim().toLowerCase();
+                        partsCount[nameLower] = (partsCount[nameLower] || 0) + (part.quantity || 1);
+                    }
+                });
+            }
+        });
+
+        return Object.entries(partsCount)
+            .sort(([, a], [, b]) => b - a)
+            .slice(0, 5)
+            .map(([name, value]) => {
+                // Capitalize first letter
+                const formattedName = name.charAt(0).toUpperCase() + name.slice(1);
+                return { name: formattedName.length > 15 ? formattedName.slice(0, 15) + '...' : formattedName, value, fullName: formattedName };
+            });
+    }, [reports]);
+
+    // 9. Recidivism by Model
+    const recidivismData = useMemo(() => {
+        const serials: Record<string, { count: number, model: string }> = {};
+
+        // Count reports per S/N or Patrimony
+        reports.forEach(r => {
+            const identifier = r.serialNumber || r.patrimonyId;
+            if (identifier && identifier.trim().length > 3) {
+                const idStr = identifier.trim().toLowerCase();
+                if (!serials[idStr]) {
+                    serials[idStr] = { count: 0, model: r.model || "Desconhecido" };
+                }
+                serials[idStr].count += 1;
+            }
+        });
+
+        // Group by model where count > 1 (recurrent)
+        const modelRecidivism: Record<string, number> = {};
+        Object.values(serials).forEach(item => {
+            if (item.count > 1) {
+                modelRecidivism[item.model] = (modelRecidivism[item.model] || 0) + 1;
+            }
+        });
+
+        return Object.entries(modelRecidivism)
+            .sort(([, a], [, b]) => b - a)
+            .slice(0, 5)
+            .map(([name, value]) => ({ name: name.length > 15 ? name.slice(0, 15) + '...' : name, value, fullName: name }));
+    }, [reports]);
+
+    const handleExportCSV = () => {
+        if (!reports.length) return;
+
+        const headers = ["ID", "Status", "Prioridade", "Criado Em", "Fechado Em", "Colaborador", "Setor", "Equipamento", "Modelo", "S/N", "Patrimonio", "Desfecho"];
+        const rows = reports.map(r => [
+            r.id || "",
+            r.status || "",
+            r.priority || "",
+            r.createdAt ? new Date(r.createdAt).toLocaleString('pt-BR') : "",
+            r.closedAt ? new Date(r.closedAt).toLocaleString('pt-BR') : "",
+            r.requesterName || "",
+            r.requesterSector || "",
+            r.deviceType || "",
+            r.model || "",
+            r.serialNumber || "",
+            r.patrimonyId || "",
+            r.outcomeType || ""
+        ]);
+
+        const csvContent = [
+            headers.join(";"),
+            ...rows.map(e => e.map(String).map(s => `"${s.replace(/"/g, '""')}"`).join(";"))
+        ].join("\n");
+
+        const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.setAttribute("href", url);
+        link.setAttribute("download", `relatorio_laudos_${new Date().toISOString().split('T')[0]}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
 
     return (
         <div className="space-y-6 animate-fade-in-up">
+            <div className="flex justify-between items-center bg-black/5 dark:bg-white/5 p-4 rounded-2xl border border-black/10 dark:border-white/10">
+                <h2 className="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent">
+                    Inteligência e Dados
+                </h2>
+                <button
+                    onClick={handleExportCSV}
+                    className="flex items-center gap-2 px-4 py-2 bg-primary/10 hover:bg-primary/20 text-primary font-bold rounded-xl transition-colors text-sm"
+                >
+                    <Download className="w-4 h-4" />
+                    Exportar CSV
+                </button>
+            </div>
+
             {/* KPI Cards */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div className="glass-strong border border-white/10 p-5 rounded-2xl shadow-lg flex items-center justify-between hover:shadow-[0_0_30px_rgba(205,39,132,0.15)] transition-shadow">
@@ -125,10 +264,13 @@ export const AnalyticsDashboard: React.FC<AnalyticsProps> = ({ reports }) => {
                 </div>
                 <div className="glass-strong border border-white/10 p-5 rounded-2xl shadow-lg flex items-center justify-between hover:shadow-[0_0_30px_rgba(59,130,246,0.15)] transition-shadow">
                     <div>
-                        <p className="text-secondary text-xs uppercase font-bold tracking-wider mb-1">Taxa de Conclusão</p>
+                        <p className="text-secondary text-xs uppercase font-bold tracking-wider mb-1">Resolução (TMA)</p>
                         <h3 className="text-3xl font-black text-blue-400">
-                            {efficiencyStats.closureRate.toFixed(0)}%
+                            {efficiencyStats.avgText}
                         </h3>
+                        <p className="text-[10px] text-secondary mt-1 tracking-wide font-medium">
+                            {efficiencyStats.closureRate.toFixed(0)}% Taxa de Conclusão
+                        </p>
                     </div>
                     <div className="p-3 bg-blue-500/10 rounded-2xl border border-blue-500/20">
                         <BarChart3 className="w-6 h-6 text-blue-400" />
@@ -185,7 +327,30 @@ export const AnalyticsDashboard: React.FC<AnalyticsProps> = ({ reports }) => {
             </div>
 
             {/* Charts Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+                {/* Timeline Chart */}
+                <div className="glass-strong border border-white/10 p-6 rounded-3xl shadow-lg lg:col-span-3 min-h-[300px] flex flex-col">
+                    <h4 className="text-md font-bold text-text mb-4">Volume de Laudos por Dia</h4>
+                    <div className="flex-1 w-full h-[250px]">
+                        {timelineData.length > 0 ? (
+                            <ResponsiveContainer width="100%" height="100%">
+                                <LineChart data={timelineData} margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" vertical={false} />
+                                    <XAxis dataKey="date" stroke="#ffffff50" fontSize={12} tickMargin={10} />
+                                    <YAxis stroke="#ffffff50" fontSize={12} allowDecimals={false} />
+                                    <Tooltip
+                                        contentStyle={{ backgroundColor: '#1e293b', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px' }}
+                                        itemStyle={{ color: '#fff' }}
+                                    />
+                                    <Line type="monotone" dataKey="count" stroke="#8b5cf6" strokeWidth={3} dot={{ r: 4, fill: '#8b5cf6', strokeWidth: 0 }} activeDot={{ r: 6 }} />
+                                </LineChart>
+                            </ResponsiveContainer>
+                        ) : (
+                            <div className="h-full flex items-center justify-center text-secondary">Sem dados suficientes</div>
+                        )}
+                    </div>
+                </div>
 
                 {/* Pie Chart: Defeitos */}
                 <div className="glass-strong border border-white/10 p-6 rounded-3xl shadow-lg min-h-[300px] flex flex-col">
@@ -236,6 +401,89 @@ export const AnalyticsDashboard: React.FC<AnalyticsProps> = ({ reports }) => {
                             </ResponsiveContainer>
                         ) : (
                             <div className="h-full flex items-center justify-center text-secondary">Sem dados suficientes</div>
+                        )}
+                    </div>
+                </div>
+
+                {/* Pie Chart: Desfechos */}
+                <div className="glass-strong border border-white/10 p-6 rounded-3xl shadow-lg min-h-[300px] flex flex-col">
+                    <h4 className="text-md font-bold text-text mb-4">Divisão por Tipo de Desfecho</h4>
+                    <div className="flex-1 w-full h-[250px]">
+                        {outcomeData.length > 0 ? (
+                            <ResponsiveContainer width="100%" height="100%">
+                                <PieChart>
+                                    <Pie
+                                        data={outcomeData}
+                                        cx="50%"
+                                        cy="50%"
+                                        labelLine={false}
+                                        outerRadius={80}
+                                        fill="#82ca9d"
+                                        dataKey="value"
+                                        label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`}
+                                    >
+                                        {outcomeData.map((entry, index) => (
+                                            <Cell key={`cell-${index}`} fill={COLORS[(index + 3) % COLORS.length]} />
+                                        ))}
+                                    </Pie>
+                                    <Tooltip />
+                                </PieChart>
+                            </ResponsiveContainer>
+                        ) : (
+                            <div className="h-full flex items-center justify-center text-secondary">Sem dados suficientes</div>
+                        )}
+                    </div>
+                </div>
+
+                {/* Bar Chart: Peças Mais Solicitadas */}
+                <div className="glass-strong border border-white/10 p-6 rounded-3xl shadow-lg lg:col-span-2 min-h-[300px] flex flex-col">
+                    <h4 className="text-md font-bold text-text mb-4">Peças Mais Solicitadas</h4>
+                    <div className="flex-1 w-full h-[250px]">
+                        {requestedPartsData.length > 0 ? (
+                            <ResponsiveContainer width="100%" height="100%">
+                                <BarChart data={requestedPartsData} layout="vertical" margin={{ top: 5, right: 30, left: 40, bottom: 5 }}>
+                                    <XAxis type="number" hide />
+                                    <YAxis type="category" dataKey="name" width={100} tick={{ fontSize: 12 }} />
+                                    <Tooltip cursor={{ fill: 'transparent' }} />
+                                    <Bar dataKey="value" fill="#3b82f6" radius={[0, 4, 4, 0]}>
+                                        {requestedPartsData.map((entry, index) => (
+                                            <Cell key={`cell-${index}`} fill={COLORS[(index + 1) % COLORS.length]} />
+                                        ))}
+                                    </Bar>
+                                </BarChart>
+                            </ResponsiveContainer>
+                        ) : (
+                            <div className="h-full flex items-center justify-center text-secondary">Nenhuma peça solicitada ainda</div>
+                        )}
+                    </div>
+                </div>
+
+                {/* Pie Chart: Reincidência por Modelo */}
+                <div className="glass-strong border border-white/10 p-6 rounded-3xl shadow-lg min-h-[300px] flex flex-col">
+                    <h4 className="text-md font-bold text-text mb-4">Reincidência por Modelo</h4>
+                    <div className="flex-1 w-full h-[250px]">
+                        {recidivismData.length > 0 ? (
+                            <ResponsiveContainer width="100%" height="100%">
+                                <PieChart>
+                                    <Pie
+                                        data={recidivismData}
+                                        cx="50%"
+                                        cy="50%"
+                                        labelLine={false}
+                                        outerRadius={80}
+                                        fill="#f59e0b"
+                                        dataKey="value"
+                                        label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`}
+                                    >
+                                        {recidivismData.map((entry, index) => (
+                                            <Cell key={`cell-${index}`} fill={COLORS[(index + 4) % COLORS.length]} />
+                                        ))}
+                                    </Pie>
+                                    <Tooltip />
+                                </PieChart>
+                            </ResponsiveContainer>
+                        ) : (
+                            <div className="h-full flex items-center justify-center text-secondary">Sem equipamentos reincidentes</div>
                         )}
                     </div>
                 </div>

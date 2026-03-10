@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../services/supabaseClient';
 import { SavedReport, getReports, getAllReports, getReportById, getUserProfile, deleteReports, updateReport } from '../services/supabaseService';
 import { Plus, Search, FileText, BarChart2, List, Copy, Download, Loader2, Eye, LayoutGrid, Table as TableIcon, Trash2, CheckSquare, XSquare, Share2, Filter, AlertTriangle, CheckCircle, Clock } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
@@ -9,6 +10,7 @@ import { KanbanBoard } from './KanbanBoard';
 import { usePDFGenerator } from '../hooks/usePDFGenerator';
 import { ReportPreview } from './ReportPreview';
 import { PreviewModal } from './PreviewModal';
+import { QuickEditModal } from './QuickEditModal';
 
 
 interface DashboardProps {
@@ -38,6 +40,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ onCreateNew, onViewReport,
     // Bulk Actions State
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
     const [isBulkActionLoading, setIsBulkActionLoading] = useState(false);
+
+    // Quick Edit State
+    const [quickEditReport, setQuickEditReport] = useState<SavedReport | null>(null);
 
     // PDF Generation State
     const [reportToPrint, setReportToPrint] = useState<SavedReport | null>(null);
@@ -71,9 +76,43 @@ export const Dashboard: React.FC<DashboardProps> = ({ onCreateNew, onViewReport,
         }
     }, [currentUser]);
 
+    // Realtime Notifications State
+    const [hasNewReports, setHasNewReports] = useState(false);
+
     useEffect(() => {
         fetchData();
     }, [currentUser, activeTab]);
+
+    useEffect(() => {
+        if (activeTab === 'all') {
+            setHasNewReports(false);
+        }
+    }, [activeTab]);
+
+    useEffect(() => {
+        if (!currentUser) return;
+
+        const channel = supabase
+            .channel('dashboard-reports-updates')
+            .on(
+                'postgres_changes',
+                {
+                    event: 'INSERT',
+                    schema: 'public',
+                    table: 'reports'
+                },
+                (payload) => {
+                    if (payload.new.user_id !== currentUser.id) {
+                        setHasNewReports(true);
+                    }
+                }
+            )
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [currentUser]);
 
     const fetchData = async () => {
         if (!currentUser) return;
@@ -92,6 +131,26 @@ export const Dashboard: React.FC<DashboardProps> = ({ onCreateNew, onViewReport,
         } finally {
             setLoading(false);
         }
+    };
+
+    // --- Memoized Recurrent Logic ---
+    const recurrentItems = React.useMemo(() => {
+        const sourceData = allReports.length > 0 ? allReports : reports;
+        const snCounts: Record<string, number> = {};
+        const patCounts: Record<string, number> = {};
+
+        sourceData.forEach(r => {
+            if (r.serialNumber) snCounts[r.serialNumber] = (snCounts[r.serialNumber] || 0) + 1;
+            if (r.patrimonyId) patCounts[r.patrimonyId] = (patCounts[r.patrimonyId] || 0) + 1;
+        });
+
+        return { snCounts, patCounts };
+    }, [reports, allReports]);
+
+    const isRecurrent = (report: SavedReport) => {
+        if (report.serialNumber && recurrentItems.snCounts[report.serialNumber] > 1) return true;
+        if (report.patrimonyId && recurrentItems.patCounts[report.patrimonyId] > 1) return true;
+        return false;
     };
 
     // --- Memoized Filtering Logic ---
@@ -147,7 +206,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onCreateNew, onViewReport,
         // Search is now real-time via useMemo, but we keep this to prevent form submit reload
     };
 
-    const handleUpdateStatus = async (reportId: string, newStatus: 'open' | 'in_progress' | 'closed') => {
+    const handleUpdateStatus = async (reportId: string, newStatus: 'open' | 'in_progress' | 'awaiting_parts' | 'closed') => {
         try {
             // Optimistic Update
             const updater = (prev: SavedReport[]) => prev.map(r => r.id === reportId ? { ...r, status: newStatus } : r);
@@ -210,7 +269,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onCreateNew, onViewReport,
         }
     };
 
-    const handleBulkStatusChange = async (newStatus: 'open' | 'in_progress' | 'closed') => {
+    const handleBulkStatusChange = async (newStatus: 'open' | 'in_progress' | 'awaiting_parts' | 'closed') => {
         setIsBulkActionLoading(true);
         try {
             const promises = Array.from(selectedIds).map((id: string) => updateReport(id, { status: newStatus }));
@@ -242,6 +301,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ onCreateNew, onViewReport,
                 return 'bg-blue-500 text-white hover:bg-blue-600 border-transparent shadow-[0_0_10px_rgba(59,130,246,0.3)]';
             case 'in_progress':
                 return 'bg-yellow-500 text-white hover:bg-yellow-600 border-transparent shadow-[0_0_10px_rgba(234,179,8,0.3)]';
+            case 'awaiting_parts':
+                return 'bg-orange-500 text-white hover:bg-orange-600 border-transparent shadow-[0_0_10px_rgba(249,115,22,0.3)]';
             case 'closed':
                 return 'bg-green-500 text-white hover:bg-green-600 border-transparent shadow-[0_0_10px_rgba(34,197,94,0.3)]';
             default:
@@ -251,8 +312,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ onCreateNew, onViewReport,
 
     // Render Table Row
     const renderRow = (report: SavedReport) => (
-        <tr key={report.id} className={`hover:bg-white/5 transition-all text-sm border-b border-white/5 last:border-0 group ${selectedIds.has(report.id) ? 'bg-primary/10' : ''}`}>
-            <td className="px-6 py-4 whitespace-nowrap">
+        <tr
+            key={report.id}
+            className={`cursor-pointer hover:bg-white/5 transition-all text-sm border-b border-white/5 last:border-0 group ${selectedIds.has(report.id) ? 'bg-primary/10' : ''}`}
+            onClick={() => setQuickEditReport(report)}
+        >
+            <td className="px-6 py-4 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
                 <input
                     type="checkbox"
                     checked={selectedIds.has(report.id)}
@@ -266,9 +331,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ onCreateNew, onViewReport,
                 {report.refId || report.id.slice(0, 8)}
             </td>
             <td className="px-6 py-4 whitespace-nowrap text-sm text-text">
-                <div className="flex flex-col">
+                <div className="flex flex-col gap-1">
                     <span className="font-medium">{report.model}</span>
                     <span className="text-xs text-secondary">{report.requesterName}</span>
+                    {isRecurrent(report) && (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-500/10 text-red-500 border border-red-500/20 w-fit">
+                            <AlertTriangle className="w-3 h-3" /> Reincidente
+                        </span>
+                    )}
                 </div>
             </td>
             <td className="px-6 py-4 whitespace-nowrap text-sm text-secondary">
@@ -290,6 +360,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ onCreateNew, onViewReport,
                             </SelectItem>
                             <SelectItem value="in_progress" className="hover:bg-white/5 cursor-pointer">
                                 <span className="text-yellow-500 font-bold dark:text-yellow-400">Em Análise</span>
+                            </SelectItem>
+                            <SelectItem value="awaiting_parts" className="hover:bg-white/5 cursor-pointer">
+                                <span className="text-orange-500 font-bold dark:text-orange-400">Aguardando Peça</span>
                             </SelectItem>
                             <SelectItem value="closed" className="hover:bg-white/5 cursor-pointer">
                                 <span className="text-green-500 font-bold dark:text-green-400">Fechado</span>
@@ -352,10 +425,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ onCreateNew, onViewReport,
 
                         <button
                             onClick={() => setActiveTab('all')}
-                            className={`flex items-center gap-2 py-2 px-5 rounded-full transition-all text-sm font-bold whitespace-nowrap ${activeTab === 'all' ? 'bg-primary text-white shadow-md' : 'text-secondary hover:text-text hover:bg-white/5'}`}
+                            className={`relative flex items-center gap-2 py-2 px-5 rounded-full transition-all text-sm font-bold whitespace-nowrap ${activeTab === 'all' ? 'bg-primary text-white shadow-md' : 'text-secondary hover:text-text hover:bg-white/5'}`}
                         >
                             <List className="w-4 h-4" />
                             Todos
+                            {hasNewReports && activeTab !== 'all' && (
+                                <span className="absolute top-0 right-0 w-3 h-3 bg-red-500 border-2 border-surface rounded-full"></span>
+                            )}
                         </button>
 
                         {isAdmin && (
@@ -375,7 +451,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onCreateNew, onViewReport,
                             <div className="relative flex-1 md:w-64 group">
                                 <input
                                     type="text"
-                                    placeholder="Buscar por ID, Cliente, Modelo..."
+                                    placeholder="Buscar por ID, Colaborador, Modelo..."
                                     className="w-full pl-11 pr-4 py-2.5 bg-black/5 dark:bg-black/20 border border-black/10 dark:border-white/10 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm transition-all font-medium placeholder-gray-500/70 dark:placeholder-gray-400/70"
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
@@ -435,6 +511,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ onCreateNew, onViewReport,
                                         <div className="flex items-center gap-2">
                                             <Clock className="w-4 h-4 text-yellow-500" />
                                             <span>Em Análise</span>
+                                        </div>
+                                    </SelectItem>
+                                    <SelectItem value="awaiting_parts">
+                                        <div className="flex items-center gap-2">
+                                            <Clock className="w-4 h-4 text-orange-500" />
+                                            <span>Aguardando Peça</span>
                                         </div>
                                     </SelectItem>
                                     <SelectItem value="closed">
@@ -607,7 +689,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onCreateNew, onViewReport,
                                                         </th>
                                                         <th className="px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">Data</th>
                                                         <th className="px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">ID</th>
-                                                        <th className="px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">Modelo / Cliente</th>
+                                                        <th className="px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">Modelo / Colaborador</th>
                                                         <th className="px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">Defeito</th>
                                                         <th className="px-6 py-3 text-left text-xs font-bold text-secondary uppercase tracking-wider">Técnico</th>
                                                         <th className="px-6 py-3 text-left text-xs font-bold text-secondary uppercase tracking-wider">Status</th>
@@ -636,7 +718,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onCreateNew, onViewReport,
                                         <KanbanBoard
                                             reports={filteredReports}
                                             onUpdateStatus={handleUpdateStatus}
-                                            onViewReport={onViewReport}
+                                            onViewReport={setQuickEditReport}
                                         />
                                     )}
                                 </>
@@ -672,6 +754,18 @@ export const Dashboard: React.FC<DashboardProps> = ({ onCreateNew, onViewReport,
                     data={previewReport}
                 />
             )}
+
+            {/* Quick Edit Modal */}
+            <QuickEditModal
+                isOpen={!!quickEditReport}
+                onClose={() => setQuickEditReport(null)}
+                report={quickEditReport}
+                onUpdated={fetchData}
+                onViewFull={(report) => {
+                    setQuickEditReport(null);
+                    onViewReport(report);
+                }}
+            />
         </div>
     );
 };
